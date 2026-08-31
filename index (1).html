@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel BPRv - Indicadores de Sinistro</title>
+    
+    <!-- Biblioteca PDF e Gráficos (Chart.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Plugin para exibir porcentagens direto em cima das fatias do gráfico de pizza -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+    <style>
+        :root {
+            --primary: #1c2833;
+            --secondary: #c0392b;
+            --light: #f4f6f7;
+            --success: #27ae60;
+            --gray: #7f8c8d;
+            --border: #d5d8dc;
+            --road-bg: #e3edf6;
+            --asphalt: #2c2c2c;
+            --yellow-line: #ffeb3b;
+        }
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: var(--light);
+            margin: 0;
+            padding: 10px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 3px solid var(--border);
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background-color: #e5e8e8;
+            color: var(--primary);
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .tab-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .dashboard-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .card {
+            flex: 1;
+            min-width: 140px;
+            color: white;
+            padding: 15px 10px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card h3 { margin: 0 0 5px 0; font-size: 0.9rem; font-weight: 500; }
+        .card .value { font-size: 2rem; font-weight: bold; margin: 0; }
+        
+        .input-section {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        .section-title {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media(min-width: 600px) {
+            .form-grid { grid-template-columns: 1fr 1fr; }
+            .form-grid.triple { grid-template-columns: 1fr 1fr 1fr; }
+        }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 4px; font-weight: 600; color: #444; font-size: 0.85rem; }
+        input, select { padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 0.95rem; width: 100%; }
+        
+        button.btn-gravar {
+            padding: 12px;
+            background-color: var(--success);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+        }
+        button.btn-pdf {
+            padding: 12px;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        button.btn-apagar {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        /* ESTILOS DO MAPA */
+        .mapa-bloco-completo { margin-bottom: 40px; page-break-inside: avoid; }
+        .road-map-wrapper {
+            background-color: var(--road-bg);
+            border: 2px solid #000;
+            padding: 30px 20px 20px 20px;
+            position: relative;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            border-radius: 4px;
+        }
+        .road-map-title {
+            text-align: center;
+            font-weight: bold;
+            font-style: italic;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            text-decoration: underline;
+            color: #2c3e50;
+        }
+        .road-directions-container {
+            display: flex;
+            justify-content: space-between;
+            min-width: 900px;
+            margin-bottom: 10px;
+        }
+        .arrow-shape {
+            background-color: var(--yellow-line);
+            color: #000;
+            border: 2px solid #000;
+            padding: 4px 12px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+        .road-cities-container {
+            position: relative;
+            height: 35px;
+            min-width: 900px;
+            border-bottom: 2px dashed #7f8c8d;
+            background-color: rgba(255,255,255,0.4);
+        }
+        .city-block {
+            position: absolute;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #1c2833;
+            border-left: 2px solid #7f8c8d;
+            border-right: 2px solid #7f8c8d;
+            padding-bottom: 5px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .road-track {
+            height: 60px;
+            background-color: var(--asphalt);
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-width: 900px;
+        }
+        .road-centerline {
+            width: 100%;
+            height: 4px;
+            background-image: linear-gradient(to right, var(--yellow-line) 50%, transparent 50%);
+            background-size: 40px 100%;
+        }
+        .road-scale-container {
+            position: relative;
+            margin-top: 5px;
+            height: 30px;
+            min-width: 900px;
+        }
+        .scale-mark {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .scale-mark::before {
+            content: '';
+            width: 1px;
+            height: 8px;
+            background-color: #000;
+            margin-bottom: 2px;
+        }
+        .victim-dot {
+            width: 14px;
+            height: 18px;
+            background-color: #ff0000;
+            border: 2px solid #000;
+            border-radius: 50%;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        .table-resumo {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            border: 1px solid #bdc3c7;
+        }
+        .table-resumo th { background-color: #34495e; color: white; padding: 6px; text-align: left; }
+        .table-resumo td { padding: 6px; border-bottom: 1px solid #ecf0f1; }
+
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 20px;}
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background-color: var(--primary); color: white; font-weight: 500; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; color: white; }
+        .badge-sim { background-color: var(--secondary); }
+        .badge-nao { background-color: var(--gray); }
+        .badge-re { background-color: #e5e7e9; color: #2c3e50; padding: 2px 6px; border-radius: 3px; font-size: 0.8rem; border: 1px solid #ccd1d1; display: inline-block; margin-top: 4px; }
+        .empty-state { text-align: center; padding: 20px; color: var(--gray); font-style: italic; }
+        
+        .chart-box {
+            width: 320px;
+            height: 320px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app-container">
+        <div class="header" id="cabecalho-pdf">
+            <h1>INDICADORES DE SINISTRO DO COMANDO BPRv</h1>
+            <p style="margin: 5px 0 0 0; color: #555; font-size: 0.9rem;">Policiamento Rodoviário</p>
+        </div>
+
+        <div class="tabs" id="menu-abas">
+            <button class="tab-btn active" id="btn-aba-lancamento" onclick="mudarAba('lancamento')">Lançamentos</button>
+            <button class="tab-btn" id="btn-aba-relatorio" onclick="tentarAcessarRelatorio()">Relatório (Mapas & Gráfico)</button>
+        </div>
+
+        <div id="aba-lancamento">
+            <div class="dashboard-cards" id="painel-placares"></div>
+
+            <div class="input-section">
+                <h3 class="section-title">Lançamento de Sinistro</h3>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>RE do Policial</label>
+                        <input type="text" id="rePolicial" placeholder="Ex: 123456-7">
+                    </div>
+                    <div class="form-group">
+                        <label>Data do Acidente</label>
+                        <input type="date" id="dataAcidente">
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; padding: 10px; background: #eef2f5; border: 1px solid #bdc3c7; border-radius: 4px;">
+                    <div class="form-grid triple">
+                        <div class="form-group">
+                            <label>Rodovia</label>
+                            <select id="rodoviaSelect" onchange="atualizarSentidos()">
+                                <option value="">Selecione a Rodovia...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>KM Exato do Acidente</label>
+                            <input type="text" id="kmExato" placeholder="Ex: 380 ou 380+500">
+                        </div>
+                        <div class="form-group">
+                            <label>Sentido da Via</label>
+                            <select id="sentido">
+                                <option value="">Selecione a rodovia primeiro...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Tipo de Acidente</label>
+                        <select id="tipoAcidente">
+                            <option value="">Selecione...</option>
+                            <option value="Choque">Choque</option>
+                            <option value="Colisão Frontal">Colisão Frontal</option>
+                            <option value="Colisão Lateral">Colisão Lateral</option>
+                            <option value="Colisão Traseira">Colisão Traseira</option>
+                            <option value="Colisão Transversal">Colisão Transversal</option>
+                            <option value="Tombamento">Tombamento</option>
+                            <option value="Capotamento">Capotamento</option>
+                            <option value="Atropelamento">Atropelamento</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Veículo Envolvido</label>
+                        <select id="veiculo">
+                            <option value="">Selecione...</option>
+                            <option value="Automóvel">Automóvel</option>
+                            <option value="Motocicleta">Motocicleta</option>
+                            <option value="Caminhão">Caminhão / Carreta</option>
+                            <option value="Ônibus">Ônibus / Van</option>
+                            <option value="Bicicleta">Bicicleta</option>
+                            <option value="Pedestre">Pedestre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Houve Vítima Fatal?</label>
+                        <select id="vitimaFatal" style="border: 1px solid #c0392b; background-color: #fdedec;" onchange="verificarFatal()">
+                            <option value="Não" selected>Não</option>
+                            <option value="Sim">Sim (Óbito)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="divQtdObitos" style="display: none;">
+                        <label style="color: #c0392b;">Quantidade de Óbitos</label>
+                        <input type="number" id="qtdObitos" min="1" value="1" style="border-color: #c0392b;">
+                    </div>
+                </div>
+                
+                <button class="btn-gravar" onclick="adicionarRegistro()">Gravar Ocorrência</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="tabela-geral">
+                    <thead>
+                        <tr>
+                            <th>Data / RE</th>
+                            <th>Localização / Trecho</th>
+                            <th>Dinâmica / Local / Adm</th>
+                            <th>Fatal?</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-dados">
+                        <tr id="empty-row">
+                            <td colspan="5" class="empty-state">Nenhuma ocorrência registrada.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="aba-relatorio" style="display: none;">
+            
+            <button class="btn-pdf" id="btn-gerar-pdf" onclick="baixarPDF()">🖨️ Baixar PDF do Relatório</button>
+
+            <div class="section-title">Estatística Geral: Tipos de Acidentes Fatais (% em cima de cada cor)</div>
+            <div class="chart-box">
+                <canvas id="graficoPizza"></canvas>
+            </div>
+
+            <div class="section-title" style="margin-top: 25px;">Mapeamento de Sinistros com Vítima Fatal</div>
+            
+            <div id="area-pdf">
+                <div id="lista-mapas">
+                    <p class="empty-state">Nenhum sinistro fatal registrado para gerar o relatório gráfico.</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const bancoRodovias = {
+            "SP-322": { 
+                orientacao: "L-O", 
+                trechos: [
+                    { nome: "Armando de Salles Oliveira", kmMin: 355, kmMax: 540, admin: "DER 14 / Concessionária (Econoroeste/Entrevias)" }, 
+                    { nome: "Waldemar Lopez Ferraz", kmMin: 540, kmMax: 557, admin: "DER 14" }
+                ], 
+                cidades: [
+                    { nome: "Pitangueiras", kmMin: 355, kmMax: 381, admin: "Concessionária" }, 
+                    { nome: "Bebedouro", kmMin: 381, kmMax: 407, admin: "Concessionária / DER" }, 
+                    { nome: "Monte Azul P.", kmMin: 407, kmMax: 424, admin: "DER 14" }, 
+                    { nome: "Cajobi", kmMin: 424, kmMax: 426, admin: "DER 14" }, 
+                    { nome: "Severínia", kmMin: 426, kmMax: 435, admin: "DER 14" }, 
+                    { nome: "Olímpia", kmMin: 435, kmMax: 461, admin: "DER 14" }, 
+                    { nome: "Guaraci", kmMin: 461, kmMax: 482, admin: "DER 14" }, 
+                    { nome: "Icém", kmMin: 482, kmMax: 518, admin: "DER 14" }, 
+                    { nome: "Orindiúva", kmMin: 518, kmMax: 527, admin: "DER 14" }, 
+                    { nome: "Paulo de Faria", kmMin: 527, kmMax: 557, admin: "DER 14" }
+                ] 
+            },
+            "SP-326": { 
+                orientacao: "N-S", 
+                trechos: [{ nome: "Brigadeiro Faria Lima", kmMin: 362, kmMax: 469, admin: "Concessionária Econoroeste / DER" }], 
+                cidades: [
+                    { nome: "Taquaral", kmMin: 362, kmMax: 368, admin: "Concessionária Econoroeste" }, 
+                    { nome: "Bebedouro", kmMin: 368, kmMax: 395, admin: "Concessionária Econoroeste" }, 
+                    { nome: "Colina", kmMin: 395, kmMax: 412, admin: "Concessionária Econoroeste" }, 
+                    { nome: "Barretos", kmMin: 412, kmMax: 449, admin: "Concessionária Econoroeste" }, 
+                    { nome: "Colômbia", kmMin: 449, kmMax: 469, admin: "DER" }
+                ] 
+            },
+            "SP-345": { 
+                orientacao: "L-O", 
+                trechos: [{ nome: "Prefeito Fábio Talarico", kmMin: 122, kmMax: 149, admin: "DER 14" }], 
+                cidades: [{ nome: "Guaíra", kmMin: 122, kmMax: 149, admin: "DER 14" }] 
+            },
+            "SP-351": { 
+                orientacao: "L-O", 
+                trechos: [
+                    { nome: "Laureanous Brogna", kmMin: 127, kmMax: 164, admin: "Concessionária Entrevias / DER" }, 
+                    { nome: "Comendador Pedro Monteleone", kmMin: 164, kmMax: 194, admin: "DER" }
+                ], 
+                cidades: [
+                    { nome: "Viradouro", kmMin: 127, kmMax: 143, admin: "Entrevias" }, 
+                    { nome: "Bebedouro", kmMin: 143, kmMax: 164, admin: "Concessionária / DER" }, 
+                    { nome: "Pirangi", kmMin: 164, kmMax: 186, admin: "DER" }, 
+                    { nome: "Paraíso", kmMin: 186, kmMax: 194, admin: "DER" }
+                ] 
+            },
+            "SP-353": { 
+                orientacao: "L-O", 
+                trechos: [{ nome: "Doutor Oswaldo Prudente Corrêa", kmMin: 0, kmMax: 17, admin: "DER / Prefeitura" }], 
+                cidades: [
+                    { nome: "Bebedouro", kmMin: 0, kmMax: 6, admin: "DER" }, 
+                    { nome: "Terra Roxa", kmMin: 6, kmMax: 17, admin: "DER / Prefeitura" }
+                ] 
+            },
+            "SP-373": { 
+                orientacao: "L-O", 
+                trechos: [
+                    { nome: "Dona Genoveva Lima de Carvalho Dias", kmMin: 135, kmMax: 149, admin: "DER" }, 
+                    { nome: "Antônio Bruno", kmMin: 149, kmMax: 181, admin: "DER" }, 
+                    { nome: "José Marcelino de Almeida (Juca)", kmMin: 181, kmMax: 190, admin: "DER" }
+                ], 
+                cidades: [
+                    { nome: "Jaborandi", kmMin: 135, kmMax: 149, admin: "DER" }, 
+                    { nome: "Colina", kmMin: 149, kmMax: 180, admin: "DER" }, 
+                    { nome: "Severínia", kmMin: 180, kmMax: 190, admin: "DER" }
+                ] 
+            },
+            "SP-425": { 
+                orientacao: "L-O", 
+                trechos: [{ nome: "Assis Chateaubriand", kmMin: 42, kmMax: 158, admin: "DER" }], 
+                cidades: [
+                    { nome: "Guaíra", kmMin: 42, kmMax: 81, admin: "DER" }, 
+                    { nome: "Barretos", kmMin: 81, kmMax: 128, admin: "DER" }, 
+                    { nome: "Olímpia", kmMin: 128, kmMax: 158, admin: "DER" }
+                ] 
+            }
+        };
+
+        let totaisAno = { '2024': 0, '2025': 0, '2026': 0 };
+        let arrayOcorrencias = []; 
+        const SENHA_MASTER = "3BPRvC"; 
+        let chartPizzaInstance = null;
+        let senhaValidadaNaSessao = false;
+
+        window.onload = function() {
+            renderizarPlacares();
+            const select = document.getElementById('rodoviaSelect');
+            for (let sigla in bancoRodovias) {
+                let option = document.createElement('option');
+                option.value = sigla;
+                option.text = sigla;
+                select.appendChild(option);
+            }
+        };
+
+        function renderizarPlacares() {
+            const painel = document.getElementById('painel-placares');
+            painel.innerHTML = ''; 
+            const cores = ['#2c3e50', '#c0392b', '#d35400', '#27ae60', '#8e44ad'];
+
+            Object.keys(totaisAno).sort().forEach((ano, index) => {
+                let div = document.createElement('div');
+                div.className = 'card';
+                div.style.backgroundColor = cores[index % cores.length];
+                div.innerHTML = `
+                    <h3>Vítimas Fatais (${ano})</h3>
+                    <p class="value">${totaisAno[ano]}</p>
+                `;
+                painel.appendChild(div);
+            });
+        }
+
+        function verificarSenhaMaster() {
+            if (senhaValidadaNaSessao) return true;
+            let senha = prompt("Acesso Restrito: Digite a Senha Master:");
+            if (senha === SENHA_MASTER) {
+                senhaValidadaNaSessao = true;
+                return true;
+            } else if (senha !== null) {
+                alert("Senha incorreta!");
+            }
+            return false;
+        }
+
+        function tentarAcessarRelatorio() {
+            if (verificarSenhaMaster()) {
+                mudarAba('relatorio');
+            }
+        }
+
+        function apagarRegistro(index) {
+            if (verificarSenhaMaster()) {
+                if(confirm("Deseja realmente apagar este lançamento?")) {
+                    arrayOcorrencias.splice(index, 1);
+                    alert("Lançamento apagado com sucesso.");
+                    atualizarTabelaGeral();
+                    renderizarPlacares();
+                }
+            }
+        }
+
+        function atualizarTabelaGeral() {
+            const tbody = document.getElementById('tabela-dados');
+            tbody.innerHTML = '';
+            if (arrayOcorrencias.length === 0) {
+                tbody.innerHTML = `<tr id="empty-row"><td colspan="5" class="empty-state">Nenhuma ocorrência registrada.</td></tr>`;
+                return;
+            }
+            arrayOcorrencias.forEach((ac, idx) => {
+                let tr = document.createElement('tr');
+                let badgeClass = ac.fatal === 'Sim' ? 'badge-sim' : 'badge-nao';
+                let textoBadge = ac.fatal === 'Sim' ? `Sim (${ac.obitos})` : 'Não';
+                tr.innerHTML = `
+                    <td><strong>${ac.data}</strong><br><span class="badge-re">RE: ${ac.re}</span></td>
+                    <td><span style="color: #2980b9; font-weight: 600;">${ac.siglaRodovia}</span><br><small>KM ${ac.kmExatoStr} - ${ac.sentido}</small></td>
+                    <td>
+                        <strong>${ac.tipo}</strong> (${ac.veiculo})<br>
+                        <small style="color: #2c3e50; font-weight: bold;">📍 ${ac.cidade}</small><br>
+                        <small style="color: #d35400; font-weight: bold;">🏢 Adm: ${ac.admin}</small>
+                    </td>
+                    <td><span class="badge ${badgeClass}">${textoBadge}</span></td>
+                    <td><button class="btn-apagar" onclick="apagarRegistro(${idx})">Apagar</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function atualizarSentidos() {
+            const sigla = document.getElementById('rodoviaSelect').value;
+            const selectSentido = document.getElementById('sentido');
+            selectSentido.innerHTML = '<option value="">Selecione...</option>';
+            if (sigla) {
+                const orientacao = bancoRodovias[sigla].orientacao;
+                if (orientacao === "N-S") {
+                    selectSentido.innerHTML += '<option value="Norte">Norte (Aumenta KM)</option>';
+                    selectSentido.innerHTML += '<option value="Sul">Sul (Diminui KM)</option>';
+                } else {
+                    selectSentido.innerHTML += '<option value="Oeste">Oeste (Aumenta KM)</option>';
+                    selectSentido.innerHTML += '<option value="Leste">Leste (Diminui KM)</option>';
+                }
+            } else {
+                selectSentido.innerHTML = '<option value="">Selecione a rodovia primeiro...</option>';
+            }
+        }
+
+        function verificarFatal() {
+            const vitimaFatal = document.getElementById('vitimaFatal').value;
+            const divQtd = document.getElementById('divQtdObitos');
+            if(vitimaFatal === 'Sim') {
+                divQtd.style.display = 'flex';
+                document.getElementById('qtdObitos').value = 1;
+            } else {
+                divQtd.style.display = 'none';
+                document.getElementById('qtdObitos').value = 0;
+            }
+        }
+
+        function mudarAba(abaId) {
+            document.getElementById('aba-lancamento').style.display = abaId === 'lancamento' ? 'block' : 'none';
+            document.getElementById('aba-relatorio').style.display = abaId === 'relatorio' ? 'block' : 'none';
+            document.getElementById('btn-aba-lancamento').className = abaId === 'lancamento' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('btn-aba-relatorio').className = abaId === 'relatorio' ? 'tab-btn active' : 'tab-btn';
+
+            if(abaId === 'relatorio') {
+                gerarRelatorioGrafico();
+            }
+        }
+
+        function extrairKm(kmString) {
+            let limpo = kmString.replace('+', '.').replace(/[^\d.]/g, '');
+            return parseFloat(limpo);
+        }
+
+        function formatarData(dataString) {
+            if(!dataString) return "";
+            const partes = dataString.split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        function descobrirCidade(sigla, km) {
+            const rodovia = bancoRodovias[sigla];
+            for (let i = 0; i < rodovia.cidades.length; i++) {
+                if (km >= rodovia.cidades[i].kmMin && km <= rodovia.cidades[i].kmMax) {
+                    return rodovia.cidades[i].nome;
+                }
+            }
+            return "Município não identificado";
+        }
+
+        function descobrirAdmin(sigla, km) {
+            const rodovia = bancoRodovias[sigla];
+            for (let i = 0; i < rodovia.cidades.length; i++) {
+                if (km >= rodovia.cidades[i].kmMin && km <= rodovia.cidades[i].kmMax) {
+                    return rodovia.cidades[i].admin;
+                }
+            }
+            for (let i = 0; i < rodovia.trechos.length; i++) {
+                if (km >= rodovia.trechos[i].kmMin && km <= rodovia.trechos[i].kmMax) {
+                    return rodovia.trechos[i].admin;
+                }
+            }
+            return "Não especificado";
+        }
+
+        function descobrirTrecho(sigla, km) {
+            const rodovia = bancoRodovias[sigla];
+            for (let i = 0; i < rodovia.trechos.length; i++) {
+                let trecho = rodovia.trechos[i];
+                if (km >= trecho.kmMin && km <= trecho.kmMax) {
+                    return trecho;
+                }
+            }
+            return { nome: "Trecho não cadastrado", kmMin: Math.floor(km) - 10, kmMax: Math.floor(km) + 10, admin: "DER" };
+        }
+
+        function adicionarRegistro() {
+            const siglaRodovia = document.getElementById('rodoviaSelect').value;
+            const kmExatoStr = document.getElementById('kmExato').value;
+            const sentido = document.getElementById('sentido').value;
+            const vitimaFatal = document.getElementById('vitimaFatal').value;
+            let qtdObitos = parseInt(document.getElementById('qtdObitos').value) || 0;
+            const dataInput = document.getElementById('dataAcidente').value;
+            const rePolicial = document.getElementById('rePolicial').value;
+            const tipo = document.getElementById('tipoAcidente').value;
+            const veiculo = document.getElementById('veiculo').value;
+
+            if (vitimaFatal === 'Não') qtdObitos = 0;
+
+            if (!siglaRodovia || !kmExatoStr || !sentido || !dataInput || !rePolicial || !tipo || !veiculo) {
+                alert('Preencha os campos obrigatórios para registrar.');
+                return;
+            }
+
+            const kmAcidente = extrairKm(kmExatoStr);
+            const cidadeEncontrada = descobrirCidade(siglaRodovia, kmAcidente);
+            const adminEncontrada = descobrirAdmin(siglaRodovia, kmAcidente);
+            const trechoEncontrado = descobrirTrecho(siglaRodovia, kmAcidente);
+            const ano = dataInput.split('-')[0];
+            const dataFormatada = formatarData(dataInput);
+
+            if (vitimaFatal === 'Sim' && qtdObitos > 0) {
+                if (totaisAno[ano] === undefined) { totaisAno[ano] = 0; }
+                totaisAno[ano] += qtdObitos;
+                renderizarPlacares();
+            }
+
+            arrayOcorrencias.push({
+                siglaRodovia: siglaRodovia,
+                kmAcidente: kmAcidente,
+                kmExatoStr: kmExatoStr,
+                sentido: sentido,
+                obitos: qtdObitos,
+                data: dataFormatada,
+                anoData: ano,
+                tipo: tipo,
+                veiculo: veiculo,
+                fatal: vitimaFatal,
+                re: rePolicial,
+                cidade: cidadeEncontrada,
+                admin: adminEncontrada,
+                trechoNome: trechoEncontrado.nome
+            });
+
+            atualizarTabelaGeral();
+
+            document.getElementById('kmExato').value = '';
+            document.getElementById('vitimaFatal').value = 'Não';
+            verificarFatal(); 
+            alert("Ocorrência gravada com sucesso!");
+        }
+
+        function gerarRelatorioGrafico() {
+            const container = document.getElementById('lista-mapas');
+            container.innerHTML = ''; 
+
+            let ocorrenciasFatais = arrayOcorrencias.filter(o => o.fatal === 'Sim');
+            montarGraficoPizza(ocorrenciasFatais);
+
+            if (ocorrenciasFatais.length === 0) {
+                container.innerHTML = '<p class="empty-state">Nenhum sinistro fatal registrado para gerar o relatório gráfico.</p>';
+                return;
+            }
+
+            let rodoviasUnicas = [...new Set(ocorrenciasFatais.map(o => o.siglaRodovia))];
+
+            rodoviasUnicas.forEach(sigla => {
+                let acidentes = ocorrenciasFatais.filter(o => o.siglaRodovia === sigla);
+                let infoRodovia = bancoRodovias[sigla];
+                
+                let labelEsquerda = infoRodovia.orientacao === 'N-S' ? '⬅ SUL (Diminui KM)' : '⬅ LESTE (Diminui KM)';
+                let labelDireita = infoRodovia.orientacao === 'N-S' ? 'NORTE (Aumenta KM) ➡' : 'OESTE (Aumenta KM) ➡';
+
+                let minKm = infoRodovia.trechos[0].kmMin;
+                let maxKm = infoRodovia.trechos[infoRodovia.trechos.length - 1].kmMax;
+                let diferenca = maxKm - minKm;
+
+                let divBlocoCompleto = document.createElement('div');
+                divBlocoCompleto.className = 'mapa-bloco-completo';
+
+                let htmlMapa = `
+                <div class="road-map-wrapper">
+                    <div class="road-map-title">${infoRodovia.trechos[0].nome.split('-')[0].trim()} (Trecho da Região)</div>
+                    
+                    <div class="road-directions-container">
+                        <div class="arrow-shape">${labelEsquerda}</div>
+                        <div class="arrow-shape">${labelDireita}</div>
+                    </div>
+
+                    <div class="road-cities-container"></div>
+                    
+                    <div class="road-track">
+                        <div class="road-centerline"></div>
+                    </div>
+                    
+                    <div class="road-scale-container"></div>
+                </div>`;
+                
+                divBlocoCompleto.innerHTML = htmlMapa;
+                
+                let pista = divBlocoCompleto.querySelector('.road-track');
+                let regua = divBlocoCompleto.querySelector('.road-scale-container');
+                let cidadesContainer = divBlocoCompleto.querySelector('.road-cities-container');
+                
+                let passo = diferenca > 100 ? 10 : (diferenca > 40 ? 5 : 2); 
+                for (let i = minKm; i <= maxKm; i += passo) {
+                    let percentual = ((i - minKm) / diferenca) * 100;
+                    let marca = document.createElement('div');
+                    marca.className = 'scale-mark';
+                    marca.style.left = `${percentual}%`;
+                    marca.innerText = i;
+                    regua.appendChild(marca);
+                }
+
+                infoRodovia.cidades.forEach(cidade => {
+                    let overlapMin = Math.max(cidade.kmMin, minKm);
+                    let overlapMax = Math.min(cidade.kmMax, maxKm);
+                    if(overlapMin < overlapMax) {
+                        let largura = ((overlapMax - overlapMin) / diferenca) * 100;
+                        let inicio = ((overlapMin - minKm) / diferenca) * 100;
+                        
+                        let blocoCidade = document.createElement('div');
+                        blocoCidade.className = 'city-block';
+                        blocoCidade.style.left = `${inicio}%`;
+                        blocoCidade.style.width = `${largura}%`;
+                        blocoCidade.innerText = `${cidade.nome} (${cidade.admin})`;
+                        cidadesContainer.appendChild(blocoCidade);
+                    }
+                });
+
+                acidentes.forEach(acidente => {
+                    let percentPosition = ((acidente.kmAcidente - minKm) / diferenca) * 100;
+                    let dot = document.createElement('div');
+                    dot.className = 'victim-dot';
+                    dot.style.left = `${percentPosition}%`;
+
+                    if(acidente.sentido === "Leste" || acidente.sentido === "Sul") {
+                        dot.style.top = '25%'; 
+                    } else {
+                        dot.style.top = '75%';
+                    }
+                    pista.appendChild(dot);
+                });
+
+                let totalObitosRodovia = 0;
+                let htmlResumo = `
+                <table class="table-resumo">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>KM Exato</th>
+                            <th>Sentido</th>
+                            <th>Dinâmica / Local / Adm</th>
+                            <th>Óbitos</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                
+                acidentes.forEach(ac => {
+                    htmlResumo += `
+                        <tr>
+                            <td>${ac.data}</td>
+                            <td><strong>${ac.kmExatoStr}</strong></td>
+                            <td>${ac.sentido}</td>
+                            <td>
+                                <strong>${ac.tipo}</strong> (${ac.veiculo})<br>
+                                <small style="color: #2c3e50;">📍 ${ac.cidade}</small><br>
+                                <small style="color: #c0392b;">🏢 Adm: ${ac.admin}</small>
+                            </td>
+                            <td style="color: #c0392b; font-weight: bold;">${ac.obitos}</td>
+                        </tr>`;
+                    totalObitosRodovia += ac.obitos;
+                });
+
+                htmlResumo += `
+                        <tr>
+                            <td colspan="4" style="text-align: right; background-color: #f1f2f6;"><strong>TOTAL DE VÍTIMAS FATAIS (${sigla}):</strong></td>
+                            <td style="background-color: #f1f2f6; color: #c0392b; font-size: 1.1rem;"><strong>${totalObitosRodovia}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>`;
+
+                divBlocoCompleto.innerHTML += htmlResumo;
+                container.appendChild(divBlocoCompleto);
+            });
+        }
+
+        function montarGraficoPizza(ocorrenciasFatais) {
+            let contagemTipos = {};
+            let totalGeralObitos = 0;
+            
+            ocorrenciasFatais.forEach(o => {
+                contagemTipos[o.tipo] = (contagemTipos[o.tipo] || 0) + o.obitos;
+                totalGeralObitos += o.obitos;
+            });
+
+            let labels = Object.keys(contagemTipos);
+            let valores = Object.values(contagemTipos);
+
+            const ctx = document.getElementById('graficoPizza').getContext('2d');
+            if (chartPizzaInstance) { chartPizzaInstance.destroy(); }
+
+            chartPizzaInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels.length > 0 ? labels : ['Sem dados'],
+                    datasets: [{
+                        data: valores.length > 0 ? valores : [1],
+                        backgroundColor: ['#c0392b', '#2980b9', '#f39c12', '#27ae60', '#8e44ad', '#d35400', '#7f8c8d']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        datalabels: {
+                            color: '#fff',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            formatter: (value, ctx) => {
+                                if (totalGeralObitos === 0) return '0%';
+                                let percentage = ((value / totalGeralObitos) * 100).toFixed(1) + '%';
+                                return percentage;
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let value = context.raw || 0;
+                                    let percentage = totalGeralObitos > 0 ? ((value / totalGeralObitos) * 100).toFixed(1) : 0;
+                                    return `${label}: ${value} óbitos (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        function prepararLayoutParaPDF(elemento) {
+            const wrappers = elemento.querySelectorAll('.road-map-wrapper');
+            wrappers.forEach(w => {
+                w.style.overflowX = 'visible';
+                w.style.width = 'max-content'; 
+            });
+        }
+
+        function baixarPDF() {
+            if (verificarSenhaMaster()) {
+                const elemento = document.getElementById('area-pdf');
+                const cabecalho = document.getElementById('cabecalho-pdf');
+                
+                let containerClone = document.createElement('div');
+                containerClone.appendChild(cabecalho.cloneNode(true));
+                
+                let graficoClone = document.querySelector('.chart-box').cloneNode(true);
+                containerClone.appendChild(graficoClone);
+
+                containerClone.appendChild(elemento.cloneNode(true));
+
+                prepararLayoutParaPDF(containerClone);
+
+                const opt = {
+                    margin:       10,
+                    filename:     'Relatorio_Indicador_Fatais_BPRv.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, windowWidth: 1200 }, 
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' } 
+                };
+
+                html2pdf().set(opt).from(containerClone).save();
+            }
+        }
+    </script>
+</body>
+</html>
