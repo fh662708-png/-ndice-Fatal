@@ -118,6 +118,33 @@
         .form-group label { margin-bottom: 4px; font-weight: 600; color: #444; font-size: 0.85rem; }
         input, select { padding: 10px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 0.95rem; width: 100%; }
         
+        /* Grid de Veículos Múltiplos */
+        .veiculos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            background: #eef2f5;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #bdc3c7;
+            margin-top: 5px;
+        }
+        .veiculo-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .veiculo-item label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        .veiculo-item input {
+            padding: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+
         button.btn-gravar {
             padding: 12px;
             background-color: var(--success);
@@ -336,7 +363,7 @@
 
                 <div class="form-grid" style="margin-top: 15px;">
                     <div class="form-group">
-                        <label>Tipo de Acidente</label>
+                        <label>Tipo de Acidente (Dinâmica)</label>
                         <select id="tipoAcidente">
                             <option value="">Selecione...</option>
                             <option value="Choque">Choque</option>
@@ -350,19 +377,7 @@
                             <option value="Outros">Outros</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Veículo Envolvido</label>
-                        <select id="veiculo">
-                            <option value="">Selecione...</option>
-                            <option value="Automóvel">Automóvel</option>
-                            <option value="Motocicleta">Motocicleta</option>
-                            <option value="Caminhão">Caminhão / Carreta</option>
-                            <option value="Ônibus">Ônibus / Van</option>
-                            <option value="Bicicleta">Bicicleta</option>
-                            <option value="Pedestre">Pedestre</option>
-                        </select>
-                    </div>
-                    
+
                     <div class="form-group">
                         <label>Houve Vítima Fatal?</label>
                         <select id="vitimaFatal" style="border: 1px solid #c0392b; background-color: #fdedec;" onchange="verificarFatal()">
@@ -376,6 +391,37 @@
                         <input type="number" id="qtdObitos" min="1" value="1" style="border-color: #c0392b;">
                     </div>
                 </div>
+
+                <!-- Quantidade de Veículos Envolvidos -->
+                <div style="margin-top: 15px;">
+                    <label style="font-weight: 600; color: #444; font-size: 0.85rem;">Quantidade de Veículos / Partes Envolvidas:</label>
+                    <div class="veiculos-grid">
+                        <div class="veiculo-item">
+                            <label>Automóvel</label>
+                            <input type="number" id="qtd_Automóvel" min="0" value="0">
+                        </div>
+                        <div class="veiculo-item">
+                            <label>Motocicleta</label>
+                            <input type="number" id="qtd_Motocicleta" min="0" value="0">
+                        </div>
+                        <div class="veiculo-item">
+                            <label>Caminhão</label>
+                            <input type="number" id="qtd_Caminhão" min="0" value="0">
+                        </div>
+                        <div class="veiculo-item">
+                            <label>Ônibus / Van</label>
+                            <input type="number" id="qtd_Ônibus" min="0" value="0">
+                        </div>
+                        <div class="veiculo-item">
+                            <label>Bicicleta</label>
+                            <input type="number" id="qtd_Bicicleta" min="0" value="0">
+                        </div>
+                        <div class="veiculo-item">
+                            <label>Pedestre</label>
+                            <input type="number" id="qtd_Pedestre" min="0" value="0">
+                        </div>
+                    </div>
+                </div>
                 
                 <button class="btn-gravar" onclick="adicionarRegistro()">Gravar Ocorrência</button>
             </div>
@@ -386,7 +432,7 @@
                         <tr>
                             <th>Data / RE</th>
                             <th>Localização / Trecho</th>
-                            <th>Dinâmica / Local / Adm</th>
+                            <th>Dinâmica / Veículos / Local / Adm</th>
                             <th>Fatal?</th>
                             <th>Ação</th>
                         </tr>
@@ -558,12 +604,26 @@
         function apagarRegistro(index) {
             if (verificarSenhaMaster()) {
                 if(confirm("Deseja realmente apagar este lançamento?")) {
+                    let ocorr = arrayOcorrencias[index];
+                    if(ocorr && ocorr.fatal === 'Sim') {
+                        totaisAno[ocorr.anoData] -= ocorr.obitos;
+                    }
                     arrayOcorrencias.splice(index, 1);
                     alert("Lançamento apagado com sucesso.");
                     atualizarTabelaGeral();
                     renderizarPlacares();
                 }
             }
+        }
+
+        function formatarVeiculosStr(veiculosObj) {
+            let lista = [];
+            for (let tipo in veiculosObj) {
+                if (veiculosObj[tipo] > 0) {
+                    lista.push(`${veiculosObj[tipo]} ${tipo}(s)`);
+                }
+            }
+            return lista.length > 0 ? lista.join(', ') : 'Nenhum informado';
         }
 
         function atualizarTabelaGeral() {
@@ -577,11 +637,14 @@
                 let tr = document.createElement('tr');
                 let badgeClass = ac.fatal === 'Sim' ? 'badge-sim' : 'badge-nao';
                 let textoBadge = ac.fatal === 'Sim' ? `Sim (${ac.obitos})` : 'Não';
+                let veiculosTexto = formatarVeiculosStr(ac.veiculos);
+
                 tr.innerHTML = `
                     <td><strong>${ac.data}</strong><br><span class="badge-re">RE: ${ac.re}</span></td>
                     <td><span style="color: #2980b9; font-weight: 600;">${ac.siglaRodovia}</span><br><small>KM ${ac.kmExatoStr} - ${ac.sentido}</small></td>
                     <td>
-                        <strong>${ac.tipo}</strong> (${ac.veiculo})<br>
+                        <strong>${ac.tipo}</strong><br>
+                        <small style="color: #555;">🚗 ${veiculosTexto}</small><br>
                         <small style="color: #2c3e50; font-weight: bold;">📍 ${ac.cidade}</small><br>
                         <small style="color: #d35400; font-weight: bold;">🏢 Adm: ${ac.admin}</small>
                     </td>
@@ -689,12 +752,23 @@
             const dataInput = document.getElementById('dataAcidente').value;
             const rePolicial = document.getElementById('rePolicial').value;
             const tipo = document.getElementById('tipoAcidente').value;
-            const veiculo = document.getElementById('veiculo').value;
+
+            // Coletar quantidades de veículos
+            const veiculosObj = {
+                "Automóvel": parseInt(document.getElementById('qtd_Automóvel').value) || 0,
+                "Motocicleta": parseInt(document.getElementById('qtd_Motocicleta').value) || 0,
+                "Caminhão": parseInt(document.getElementById('qtd_Caminhão').value) || 0,
+                "Ônibus": parseInt(document.getElementById('qtd_Ônibus').value) || 0,
+                "Bicicleta": parseInt(document.getElementById('qtd_Bicicleta').value) || 0,
+                "Pedestre": parseInt(document.getElementById('qtd_Pedestre').value) || 0
+            };
+
+            let totalVeiculos = Object.values(veiculosObj).reduce((a, b) => a + b, 0);
 
             if (vitimaFatal === 'Não') qtdObitos = 0;
 
-            if (!siglaRodovia || !kmExatoStr || !sentido || !dataInput || !rePolicial || !tipo || !veiculo) {
-                alert('Preencha os campos obrigatórios para registrar.');
+            if (!siglaRodovia || !kmExatoStr || !sentido || !dataInput || !rePolicial || !tipo || totalVeiculos === 0) {
+                alert('Preencha os campos obrigatórios e informe pelo menos 1 veículo ou parte envolvida.');
                 return;
             }
 
@@ -720,7 +794,7 @@
                 data: dataFormatada,
                 anoData: ano,
                 tipo: tipo,
-                veiculo: veiculo,
+                veiculos: veiculosObj,
                 fatal: vitimaFatal,
                 re: rePolicial,
                 cidade: cidadeEncontrada,
@@ -730,6 +804,10 @@
 
             atualizarTabelaGeral();
 
+            // Limpar campos de quantidade de veículos
+            ['Automóvel', 'Motocicleta', 'Caminhão', 'Ônibus', 'Bicicleta', 'Pedestre'].forEach(v => {
+                document.getElementById(`qtd_${v}`).value = 0;
+            });
             document.getElementById('kmExato').value = '';
             document.getElementById('vitimaFatal').value = 'Não';
             verificarFatal(); 
@@ -836,20 +914,22 @@
                             <th>Data</th>
                             <th>KM Exato</th>
                             <th>Sentido</th>
-                            <th>Dinâmica / Local / Adm</th>
+                            <th>Dinâmica / Veículos / Local / Adm</th>
                             <th>Óbitos</th>
                         </tr>
                     </thead>
                     <tbody>`;
                 
                 acidentes.forEach(ac => {
+                    let veiculosTexto = formatarVeiculosStr(ac.veiculos);
                     htmlResumo += `
                         <tr>
                             <td>${ac.data}</td>
                             <td><strong>${ac.kmExatoStr}</strong></td>
                             <td>${ac.sentido}</td>
                             <td>
-                                <strong>${ac.tipo}</strong> (${ac.veiculo})<br>
+                                <strong>${ac.tipo}</strong><br>
+                                <small style="color: #555;">🚗 ${veiculosTexto}</small><br>
                                 <small style="color: #2c3e50;">📍 ${ac.cidade}</small><br>
                                 <small style="color: #c0392b;">🏢 Adm: ${ac.admin}</small>
                             </td>
