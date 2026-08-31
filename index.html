@@ -157,7 +157,13 @@
             width: 100%;
             margin-top: 15px;
         }
+        .btn-acoes-relatorio {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
         button.btn-pdf {
+            flex: 1;
             padding: 12px;
             background-color: #2980b9;
             color: white;
@@ -166,8 +172,17 @@
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            width: 100%;
-            margin-bottom: 20px;
+        }
+        button.btn-imprimir {
+            flex: 1;
+            padding: 12px;
+            background-color: #8e44ad;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
         }
         button.btn-apagar {
             background-color: #e74c3c;
@@ -309,6 +324,22 @@
             background: #fff;
             padding: 5px;
         }
+
+        /* Esconde elementos de navegação e botões quando for imprimir diretamente pela página */
+        @media print {
+            .tabs, .input-section, .table-responsive, button, #menu-abas {
+                display: none !important;
+            }
+            body {
+                background: #fff;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -448,7 +479,10 @@
 
         <div id="aba-relatorio" style="display: none;">
             
-            <button class="btn-pdf" id="btn-gerar-pdf" onclick="baixarPDF()">🖨️ Baixar PDF do Relatório</button>
+            <div class="btn-acoes-relatorio">
+                <button class="btn-pdf" id="btn-gerar-pdf" onclick="baixarPDF()">📥 Baixar PDF (Automático)</button>
+                <button class="btn-imprimir" onclick="salvarComoPdfNativo()">🖨️ Salvar / Imprimir PDF (Nativo)</button>
+            </div>
 
             <div class="section-title">Estatística Geral: Tipos de Acidentes Fatais (% em cima de cada cor)</div>
             <div class="chart-box">
@@ -753,7 +787,6 @@
             const rePolicial = document.getElementById('rePolicial').value;
             const tipo = document.getElementById('tipoAcidente').value;
 
-            // Coletar quantidades de veículos
             const veiculosObj = {
                 "Automóvel": parseInt(document.getElementById('qtd_Automóvel').value) || 0,
                 "Motocicleta": parseInt(document.getElementById('qtd_Motocicleta').value) || 0,
@@ -804,7 +837,6 @@
 
             atualizarTabelaGeral();
 
-            // Limpar campos de quantidade de veículos
             ['Automóvel', 'Motocicleta', 'Caminhão', 'Ônibus', 'Bicicleta', 'Pedestre'].forEach(v => {
                 document.getElementById(`qtd_${v}`).value = 0;
             });
@@ -1040,6 +1072,13 @@
                 };
 
                 html2pdf().set(opt).from(containerClone).save();
+            }
+        }
+
+        function salvarComoPdfNativo() {
+            if (verificarSenhaMaster()) {
+                // Abre a tela de impressão do navegador (onde basta selecionar "Salvar como PDF")
+                window.print();
             }
         }
     </script>
