@@ -31,7 +31,7 @@
             padding: 10px; 
             color: #333; 
             min-height: 100vh;
-            position: relative; /* Necessário para a marca d'água */
+            position: relative; 
         }
 
         /* =====================================================
@@ -45,10 +45,9 @@
             transform: translate(-50%, -50%);
             width: 500px;
             height: 500px;
-            /* Se a sua imagem tiver outro nome, mude o 'zz.jfif' abaixo */
-            background: url('zz.jfif') no-repeat center center;
+            background: url('zz.jfif.webp') no-repeat center center;
             background-size: contain;
-            opacity: 0.12; /* Ajuste a transparência (0.10 a 0.20 fica bom) */
+            opacity: 0.12; 
             pointer-events: none;
             z-index: 0;
         }
@@ -56,12 +55,11 @@
         .container { 
             max-width: 1000px; 
             margin: 0 auto; 
-            /* Fundo levemente transparente para mostrar a marca d'água */
             background: rgba(255, 255, 255, 0.94); 
             padding: 20px; 
             border-radius: 8px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-            position: relative; /* Coloca o container acima da marca d'água */
+            position: relative; 
             z-index: 1;
         }
 
@@ -131,10 +129,9 @@
         
         .chart-box { width: 320px; height: 320px; margin: 20px auto; background: #fff; padding: 5px; }
 
-        /* Ajustes para a hora da impressão */
         @media print {
             body::before {
-                opacity: 0.05; /* Deixa o brasão bem fraco na impressão */
+                opacity: 0.05; 
             }
             .tabs, .input-section, .table-responsive, button, #menu-abas { display: none !important; }
             body { background: #fff; padding: 0; }
@@ -544,7 +541,6 @@
             });
         }
 
-        // --- FUNÇÃO DE SENTIDOS RESTAURADA ---
         window.atualizarSentidos = function() {
             const sigla = document.getElementById('rodoviaSelect').value;
             const selectSentido = document.getElementById('sentido');
