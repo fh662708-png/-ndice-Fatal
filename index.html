@@ -277,15 +277,88 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- DADOS ESTÁTICOS ---
+        // --- DADOS ESTÁTICOS COMPLETOS ---
         const bancoRodovias = {
-            "SP-322": { orientacao: "L-O", trechos: [{ nome: "Armando de Salles Oliveira", kmMin: 355, kmMax: 540, admin: "DER 14 / Concessionária (Econoroeste/Entrevias)" }, { nome: "Waldemar Lopez Ferraz", kmMin: 540, kmMax: 557, admin: "DER 14" }], cidades: [{ nome: "Pitangueiras", kmMin: 355, kmMax: 381, admin: "Concessionária" }, { nome: "Bebedouro", kmMin: 381, kmMax: 407, admin: "Concessionária / DER" }, { nome: "Monte Azul P.", kmMin: 407, kmMax: 424, admin: "DER 14" }, { nome: "Cajobi", kmMin: 424, kmMax: 426, admin: "DER 14" }, { nome: "Severínia", kmMin: 426, kmMax: 435, admin: "DER 14" }, { nome: "Olímpia", kmMin: 435, kmMax: 461, admin: "DER 14" }, { nome: "Guaraci", kmMin: 461, kmMax: 482, admin: "DER 14" }, { nome: "Icém", kmMin: 482, kmMax: 518, admin: "DER 14" }, { nome: "Orindiúva", kmMin: 518, kmMax: 527, admin: "DER 14" }, { nome: "Paulo de Faria", kmMin: 527, kmMax: 557, admin: "DER 14" }] },
-            "SP-326": { orientacao: "N-S", trechos: [{ nome: "Brigadeiro Faria Lima", kmMin: 362, kmMax: 469, admin: "Concessionária Econoroeste / DER" }], cidades: [{ nome: "Taquaral", kmMin: 362, kmMax: 368, admin: "Concessionária Econoroeste" }, { nome: "Bebedouro", kmMin: 368, kmMax: 395, admin: "Concessionária Econoroeste" }, { nome: "Colina", kmMin: 395, kmMax: 412, admin: "Concessionária Econoroeste" }, { nome: "Barretos", kmMin: 412, kmMax: 449, admin: "Concessionária Econoroeste" }, { nome: "Colômbia", kmMin: 449, kmMax: 469, admin: "DER" }] },
-            "SP-345": { orientacao: "L-O", trechos: [{ nome: "Prefeito Fábio Talarico", kmMin: 122, kmMax: 149, admin: "DER 14" }], cidades: [{ nome: "Guaíra", kmMin: 122, kmMax: 149, admin: "DER 14" }] },
-            "SP-351": { orientacao: "L-O", trechos: [{ nome: "Laureanous Brogna", kmMin: 127, kmMax: 164, admin: "Concessionária Entrevias / DER" }, { nome: "Comendador Pedro Monteleone", kmMin: 164, kmMax: 194, admin: "DER" }], cidades: [{ nome: "Viradouro", kmMin: 127, kmMax: 143, admin: "Entrevias" }, { nome: "Bebedouro", kmMin: 143, kmMax: 164, admin: "Concessionária / DER" }, { nome: "Pirangi", kmMin: 164, kmMax: 186, admin: "DER" }, { nome: "Paraíso", kmMin: 186, kmMax: 194, admin: "DER" }] },
-            "SP-353": { orientacao: "L-O", trechos: [{ nome: "Doutor Oswaldo Prudente Corrêa", kmMin: 0, kmMax: 17, admin: "DER / Prefeitura" }], cidades: [{ nome: "Bebedouro", kmMin: 0, kmMax: 6, admin: "DER" }, { nome: "Terra Roxa", kmMin: 6, kmMax: 17, admin: "DER / Prefeitura" }] },
-            "SP-373": { orientacao: "L-O", trechos: [{ nome: "Dona Genoveva Lima de Carvalho Dias", kmMin: 135, kmMax: 149, admin: "DER" }, { nome: "Antônio Bruno", kmMin: 149, kmMax: 181, admin: "DER" }, { nome: "José Marcelino de Almeida (Juca)", kmMin: 181, kmMax: 190, admin: "DER" }], cidades: [{ nome: "Jaborandi", kmMin: 135, kmMax: 149, admin: "DER" }, { nome: "Colina", kmMin: 149, kmMax: 180, admin: "DER" }, { nome: "Severínia", kmMin: 180, kmMax: 190, admin: "DER" }] },
-            "SP-425": { orientacao: "L-O", trechos: [{ nome: "Assis Chateaubriand", kmMin: 42, kmMax: 158, admin: "DER" }], cidades: [{ nome: "Guaíra", kmMin: 42, kmMax: 81, admin: "DER" }, { nome: "Barretos", kmMin: 81, kmMax: 128, admin: "DER" }, { nome: "Olímpia", kmMin: 128, kmMax: 158, admin: "DER" }] },
+            "SP-322": { 
+                orientacao: "L-O", 
+                trechos: [
+                    { nome: "Armando de Salles Oliveira", kmMin: 355, kmMax: 540, admin: "DER 14 / Concessionária (Econoroeste/Entrevias)" }, 
+                    { nome: "Waldemar Lopez Ferraz", kmMin: 540, kmMax: 557, admin: "DER 14" }
+                ], 
+                cidades: [
+                    { nome: "Pitangueiras", kmMin: 355, kmMax: 381, admin: "Concessionária" }, 
+                    { nome: "Bebedouro", kmMin: 381, kmMax: 407, admin: "Concessionária / DER" }, 
+                    { nome: "Monte Azul P.", kmMin: 407, kmMax: 424, admin: "DER 14" }, 
+                    { nome: "Cajobi", kmMin: 424, kmMax: 426, admin: "DER 14" }, 
+                    { nome: "Severínia", kmMin: 426, kmMax: 435, admin: "DER 14" }, 
+                    { nome: "Olímpia", kmMin: 435, kmMax: 461, admin: "DER 14" }, 
+                    { nome: "Guaraci", kmMin: 461, kmMax: 482, admin: "DER 14" }, 
+                    { nome: "Icém", kmMin: 482, kmMax: 518, admin: "DER 14" }, 
+                    { nome: "Orindiúva", kmMin: 518, kmMax: 527, admin: "DER 14" }, 
+                    { nome: "Paulo de Faria", kmMin: 527, kmMax: 557, admin: "DER 14" }
+                ] 
+            },
+            "SP-326": { 
+                orientacao: "N-S", 
+                trechos: [{ nome: "Brigadeiro Faria Lima", kmMin: 362, kmMax: 469, admin: "Concessionária Econoroeste / DER" }], 
+                cidades: [
+                    { nome: "Taquaral", kmMin: 362, kmMax: 368, admin: "Concessionária Econoroeste" }, 
+                    { nome: "Bebedouro", kmMin: 368, kmMax: 395, admin: "Concessionária Econoroeste" }, 
+                    { nome: "Colina", kmMin: 395, kmMax: 412, admin: "Concessionária Econoroeste" }, 
+                    { nome: "Barretos", kmMin: 412, kmMax: 449, admin: "Concessionária Econoroeste" }, 
+                    { nome: "Colômbia", kmMin: 449, kmMax: 469, admin: "DER" }
+                ] 
+            },
+            "SP-345": { 
+                orientacao: "L-O", 
+                trechos: [{ nome: "Prefeito Fábio Talarico", kmMin: 122, kmMax: 149, admin: "DER 14" }], 
+                cidades: [{ nome: "Guaíra", kmMin: 122, kmMax: 149, admin: "DER 14" }] 
+            },
+            "SP-351": { 
+                orientacao: "L-O", 
+                trechos: [
+                    { nome: "Laureanous Brogna", kmMin: 127, kmMax: 164, admin: "Concessionária Entrevias / DER" }, 
+                    { nome: "Comendador Pedro Monteleone", kmMin: 164, kmMax: 194, admin: "DER" }
+                ], 
+                cidades: [
+                    { nome: "Viradouro", kmMin: 127, kmMax: 143, admin: "Entrevias" }, 
+                    { nome: "Bebedouro", kmMin: 143, kmMax: 164, admin: "Concessionária / DER" }, 
+                    { nome: "Pirangi", kmMin: 164, kmMax: 186, admin: "DER" }, 
+                    { nome: "Paraíso", kmMin: 186, kmMax: 194, admin: "DER" }
+                ] 
+            },
+            "SP-353": { 
+                orientacao: "L-O", 
+                trechos: [{ nome: "Doutor Oswaldo Prudente Corrêa", kmMin: 0, kmMax: 17, admin: "DER / Prefeitura" }], 
+                cidades: [
+                    { nome: "Bebedouro", kmMin: 0, kmMax: 6, admin: "DER" }, 
+                    { nome: "Terra Roxa", kmMin: 6, kmMax: 17, admin: "DER / Prefeitura" }
+                ] 
+            },
+            "SP-373": { 
+                orientacao: "L-O", 
+                trechos: [
+                    { nome: "Dona Genoveva Lima de Carvalho Dias", kmMin: 135, kmMax: 149, admin: "DER" }, 
+                    { nome: "Antônio Bruno", kmMin: 149, kmMax: 181, admin: "DER" }, 
+                    { nome: "José Marcelino de Almeida (Juca)", kmMin: 181, kmMax: 190, admin: "DER" }
+                ], 
+                cidades: [
+                    { nome: "Jaborandi", kmMin: 135, kmMax: 149, admin: "DER" }, 
+                    { nome: "Colina", kmMin: 149, kmMax: 180, admin: "DER" }, 
+                    { nome: "Severínia", kmMin: 180, kmMax: 190, admin: "DER" }
+                ] 
+            },
+            "SP-425": { 
+                orientacao: "L-O", 
+                trechos: [{ nome: "Assis Chateaubriand", kmMin: 42, kmMax: 158, admin: "DER" }], 
+                cidades: [
+                    { nome: "Guaíra", kmMin: 42, kmMax: 81, admin: "DER" }, 
+                    { nome: "Barretos", kmMin: 81, kmMax: 128, admin: "DER" }, 
+                    { nome: "Olímpia", kmMin: 128, kmMax: 158, admin: "DER" }
+                ] 
+            },
+            
+            // --- RODOVIAS SPA E SPD ---
             "SPA-058/425": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 1.500, admin: "DER" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 1.500, admin: "DER" }] },
             "SPA-061/425": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 0.600, admin: "DER" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 0.600, admin: "DER" }] },
             "SPA-135/351": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 1.300, admin: "Concessionária" }], cidades: [{ nome: "Viradouro", kmMin: 0, kmMax: 1.300, admin: "Concessionária" }] },
