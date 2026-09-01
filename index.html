@@ -31,31 +31,30 @@
             padding: 10px; 
             color: #333; 
             min-height: 100vh;
-            position: relative; 
         }
 
         /* =====================================================
-           MARCA D'ÁGUA NO FUNDO DA TELA
+           MARCA D'ÁGUA (FANTASMA POR CIMA DE TUDO)
            ===================================================== */
-        body::before {
+        body::after {
             content: "";
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 500px;
-            height: 500px;
+            width: 550px; /* Tamanho do brasão */
+            height: 550px;
             background: url('zz.jfif.webp') no-repeat center center;
             background-size: contain;
-            opacity: 0.12; 
-            pointer-events: none;
-            z-index: 0;
+            opacity: 0.15; /* Transparência ideal */
+            pointer-events: none; /* Garante que os cliques atravessem a imagem */
+            z-index: 9999; /* Força a ficar na frente de todas as caixas brancas */
         }
 
         .container { 
             max-width: 1000px; 
             margin: 0 auto; 
-            background: rgba(255, 255, 255, 0.94); 
+            background: #fff; 
             padding: 20px; 
             border-radius: 8px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
@@ -129,9 +128,10 @@
         
         .chart-box { width: 320px; height: 320px; margin: 20px auto; background: #fff; padding: 5px; }
 
+        /* Ajustes para a hora da impressão */
         @media print {
-            body::before {
-                opacity: 0.05; 
+            body::after {
+                opacity: 0.05; /* Deixa o brasão bem fraco na impressão */
             }
             .tabs, .input-section, .table-responsive, button, #menu-abas { display: none !important; }
             body { background: #fff; padding: 0; }
@@ -169,7 +169,7 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 15px; padding: 10px; background: rgba(238, 242, 245, 0.85); border: 1px solid #bdc3c7; border-radius: 4px;">
+                <div style="margin-top: 15px; padding: 10px; background: #eef2f5; border: 1px solid #bdc3c7; border-radius: 4px;">
                     <div class="form-grid triple">
                         <div class="form-group">
                             <label>Rodovia</label>
