@@ -501,19 +501,32 @@
             });
         }
 
+        // --- FUNÇÃO DE SENTIDOS RESTAURADA ---
         window.atualizarSentidos = function() {
-            const sigla = document.getElementById('rodoviaSelect').value; const selectSentido = document.getElementById('sentido');
+            const sigla = document.getElementById('rodoviaSelect').value;
+            const selectSentido = document.getElementById('sentido');
             selectSentido.innerHTML = '<option value="">Selecione...</option>';
+            
             if (sigla) {
                 const rodovia = bancoRodovias[sigla];
                 if (sigla.startsWith('SPA') || sigla.startsWith('SPD')) {
-                    let municipios = [...new Set(rodovia.cidades.map(c => c.nome))]; let nomeMun = municipios.join(' / ');
-                    selectSentido.innerHTML += `<option value="Acesso a ${nomeMun}">Acesso a ${nomeMun}</option><option value="Retorno de ${nomeMun}">Retorno de ${nomeMun}</option>`;
+                    let municipios = [...new Set(rodovia.cidades.map(c => c.nome))];
+                    let nomeMun = municipios.join(' / ');
+                    
+                    selectSentido.innerHTML += `<option value="Acesso a ${nomeMun}">Acesso a ${nomeMun}</option>`;
+                    selectSentido.innerHTML += `<option value="Retorno de ${nomeMun}">Retorno de ${nomeMun}</option>`;
                 } else {
                     const orientacao = rodovia.orientacao;
-                    if (orientacao === "N-S") selectSentido.innerHTML += '<option value="Norte">Norte (+ KM)</option><option value="Sul">- KM</option>';
-                    else selectSentido.innerHTML += '<option value="Oeste">Oeste (+ KM)</option><option value="Leste">- KM</option>';
+                    if (orientacao === "N-S") {
+                        selectSentido.innerHTML += '<option value="Norte">Norte (Aumenta KM)</option>';
+                        selectSentido.innerHTML += '<option value="Sul">Sul (Diminui KM)</option>';
+                    } else {
+                        selectSentido.innerHTML += '<option value="Oeste">Oeste (Aumenta KM)</option>';
+                        selectSentido.innerHTML += '<option value="Leste">Leste (Diminui KM)</option>';
+                    }
                 }
+            } else {
+                selectSentido.innerHTML = '<option value="">Selecione a rodovia primeiro...</option>';
             }
         };
 
