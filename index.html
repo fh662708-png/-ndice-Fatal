@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel BPRv - Indicadores de Sinistro</title>
+    <title>Painel BPRv - Indicadores de Sinistro (Firebase)</title>
     
     <!-- Biblioteca PDF e Gráficos (Chart.js) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -259,7 +259,28 @@
 
     </div>
 
-    <script>
+    <!-- SCRIPTS DO FIREBASE v10+ MODULAR -->
+    <script type="module">
+        // Importa as funções necessárias do SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // CONFIGURAÇÃO GERADA COM BASE NO SEU JSON
+        const firebaseConfig = {
+            apiKey: "AIzaSyAqQkQ5STqYVN1ZVd9LP4p2qR8r6PXvbQ0",
+            authDomain: "indice-sinistro.firebaseapp.com",
+            databaseURL: "https://indice-sinistro-default-rtdb.firebaseio.com",
+            projectId: "indice-sinistro",
+            storageBucket: "indice-sinistro.firebasestorage.app",
+            messagingSenderId: "99898975371",
+            appId: "1:99898975371:android:a3806dfd3a98a20e23a08e"
+        };
+
+        // Inicializa o Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- DADOS ESTÁTICOS ---
         const bancoRodovias = {
             "SP-322": { orientacao: "L-O", trechos: [{ nome: "Armando de Salles Oliveira", kmMin: 355, kmMax: 540, admin: "DER 14 / Concessionária (Econoroeste/Entrevias)" }, { nome: "Waldemar Lopez Ferraz", kmMin: 540, kmMax: 557, admin: "DER 14" }], cidades: [{ nome: "Pitangueiras", kmMin: 355, kmMax: 381, admin: "Concessionária" }, { nome: "Bebedouro", kmMin: 381, kmMax: 407, admin: "Concessionária / DER" }, { nome: "Monte Azul P.", kmMin: 407, kmMax: 424, admin: "DER 14" }, { nome: "Cajobi", kmMin: 424, kmMax: 426, admin: "DER 14" }, { nome: "Severínia", kmMin: 426, kmMax: 435, admin: "DER 14" }, { nome: "Olímpia", kmMin: 435, kmMax: 461, admin: "DER 14" }, { nome: "Guaraci", kmMin: 461, kmMax: 482, admin: "DER 14" }, { nome: "Icém", kmMin: 482, kmMax: 518, admin: "DER 14" }, { nome: "Orindiúva", kmMin: 518, kmMax: 527, admin: "DER 14" }, { nome: "Paulo de Faria", kmMin: 527, kmMax: 557, admin: "DER 14" }] },
             "SP-326": { orientacao: "N-S", trechos: [{ nome: "Brigadeiro Faria Lima", kmMin: 362, kmMax: 469, admin: "Concessionária Econoroeste / DER" }], cidades: [{ nome: "Taquaral", kmMin: 362, kmMax: 368, admin: "Concessionária Econoroeste" }, { nome: "Bebedouro", kmMin: 368, kmMax: 395, admin: "Concessionária Econoroeste" }, { nome: "Colina", kmMin: 395, kmMax: 412, admin: "Concessionária Econoroeste" }, { nome: "Barretos", kmMin: 412, kmMax: 449, admin: "Concessionária Econoroeste" }, { nome: "Colômbia", kmMin: 449, kmMax: 469, admin: "DER" }] },
@@ -267,88 +288,41 @@
             "SP-351": { orientacao: "L-O", trechos: [{ nome: "Laureanous Brogna", kmMin: 127, kmMax: 164, admin: "Concessionária Entrevias / DER" }, { nome: "Comendador Pedro Monteleone", kmMin: 164, kmMax: 194, admin: "DER" }], cidades: [{ nome: "Viradouro", kmMin: 127, kmMax: 143, admin: "Entrevias" }, { nome: "Bebedouro", kmMin: 143, kmMax: 164, admin: "Concessionária / DER" }, { nome: "Pirangi", kmMin: 164, kmMax: 186, admin: "DER" }, { nome: "Paraíso", kmMin: 186, kmMax: 194, admin: "DER" }] },
             "SP-353": { orientacao: "L-O", trechos: [{ nome: "Doutor Oswaldo Prudente Corrêa", kmMin: 0, kmMax: 17, admin: "DER / Prefeitura" }], cidades: [{ nome: "Bebedouro", kmMin: 0, kmMax: 6, admin: "DER" }, { nome: "Terra Roxa", kmMin: 6, kmMax: 17, admin: "DER / Prefeitura" }] },
             "SP-373": { orientacao: "L-O", trechos: [{ nome: "Dona Genoveva Lima de Carvalho Dias", kmMin: 135, kmMax: 149, admin: "DER" }, { nome: "Antônio Bruno", kmMin: 149, kmMax: 181, admin: "DER" }, { nome: "José Marcelino de Almeida (Juca)", kmMin: 181, kmMax: 190, admin: "DER" }], cidades: [{ nome: "Jaborandi", kmMin: 135, kmMax: 149, admin: "DER" }, { nome: "Colina", kmMin: 149, kmMax: 180, admin: "DER" }, { nome: "Severínia", kmMin: 180, kmMax: 190, admin: "DER" }] },
-            "SP-425": { orientacao: "L-O", trechos: [{ nome: "Assis Chateaubriand", kmMin: 42, kmMax: 158, admin: "DER" }], cidades: [{ nome: "Guaíra", kmMin: 42, kmMax: 81, admin: "DER" }, { nome: "Barretos", kmMin: 81, kmMax: 128, admin: "DER" }, { nome: "Olímpia", kmMin: 128, kmMax: 158, admin: "DER" }] },
-            
-            "SPA-058/425": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 1.500, admin: "DER" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 1.500, admin: "DER" }] },
-            "SPA-061/425": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 0.600, admin: "DER" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 0.600, admin: "DER" }] },
-            "SPA-135/351": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 1.300, admin: "Concessionária" }], cidades: [{ nome: "Viradouro", kmMin: 0, kmMax: 1.300, admin: "Concessionária" }] },
-            "SPA-137/425": { orientacao: "N-S", trechos: [{ nome: "Doutor Wilken Manoel Neves", kmMin: 0, kmMax: 4.890, admin: "Prefeitura" }], cidades: [{ nome: "Olímpia", kmMin: 0, kmMax: 4.890, admin: "Prefeitura" }] },
-            "SPA-140/373": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 0.484, admin: "DER" }], cidades: [{ nome: "Jaborandi", kmMin: 0, kmMax: 0.484, admin: "DER" }] },
-            "SPA-357/326": { orientacao: "N-S", trechos: [{ nome: "Pedro Luiz Furlan", kmMin: 0, kmMax: 11.057, admin: "DER/Prefeitura" }], cidades: [{ nome: "Taiúva", kmMin: 0, kmMax: 11.057, admin: "DER/Prefeitura" }] },
-            "SPA-364/322": { orientacao: "N-S", trechos: [{ nome: "Nelson Marcelino da Silva", kmMin: 0, kmMax: 0.600, admin: "DER" }], cidades: [{ nome: "Pitangueiras", kmMin: 0, kmMax: 0.600, admin: "DER" }] },
-            "SPA-375/322": { orientacao: "N-S", trechos: [{ nome: "Guiné Fernandes Serrano", kmMin: 0, kmMax: 3.000, admin: "Concessionária/Estadual" }], cidades: [{ nome: "Pitangueiras", kmMin: 0, kmMax: 3.000, admin: "Concessionária/Estadual" }] },
-            "SPA-379/326": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 2.630, admin: "Estadual" }], cidades: [{ nome: "Bebedouro", kmMin: 0, kmMax: 2.630, admin: "Estadual" }] },
-            "SPA-405/326": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 0.890, admin: "Estadual" }], cidades: [{ nome: "Colina", kmMin: 0, kmMax: 0.890, admin: "Estadual" }] },
-            "SPA-411/322": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 0.940, admin: "Estadual" }], cidades: [{ nome: "Monte Azul Paulista", kmMin: 0, kmMax: 0.940, admin: "Estadual" }] },
-            "SPA-419/322": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 0.660, admin: "Estadual" }], cidades: [{ nome: "Monte Azul Paulista", kmMin: 0, kmMax: 0.660, admin: "Estadual" }] },
-            "SPA-426/322": { orientacao: "N-S", trechos: [{ nome: "Augusto Medeiros Bulle", kmMin: 0, kmMax: 9.250, admin: "Estadual/Municipal" }], cidades: [{ nome: "Cajobi", kmMin: 0, kmMax: 9.250, admin: "Estadual/Municipal" }] },
-            "SPA-442/322": { orientacao: "N-S", trechos: [{ nome: "Álvaro Brito", kmMin: 0, kmMax: 4.490, admin: "Estadual" }], cidades: [{ nome: "Olímpia", kmMin: 0, kmMax: 4.490, admin: "Estadual" }] },
-            "SPA-453/326": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 5.270, admin: "Estadual" }], cidades: [{ nome: "Colômbia", kmMin: 0, kmMax: 5.270, admin: "Estadual" }] },
-            "SPA-458/322": { orientacao: "N-S", trechos: [{ nome: "Pedro Antunes Ferreira", kmMin: 0, kmMax: 0.880, admin: "Estadual" }], cidades: [{ nome: "Olímpia", kmMin: 0, kmMax: 0.880, admin: "Estadual" }] },
-            "SPA-462/322": { orientacao: "N-S", trechos: [{ nome: "Roberto Azeda Ribeiro de Aguiar", kmMin: 0, kmMax: 9.520, admin: "Estadual" }], cidades: [{ nome: "Guaraci", kmMin: 0, kmMax: 9.520, admin: "Estadual" }] },
-            "SPA-473/322": { orientacao: "N-S", trechos: [{ nome: "Joaquim Elias Ribeiro de Aguiar", kmMin: 0, kmMax: 3.100, admin: "Estadual" }], cidades: [{ nome: "Altair", kmMin: 0, kmMax: 3.100, admin: "Estadual" }] },
-            "SPA-498/322": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 0.587, admin: "Estadual" }], cidades: [{ nome: "Icém", kmMin: 0, kmMax: 0.587, admin: "Estadual" }] },
-            "SPA-523/322": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 3.870, admin: "Estadual" }], cidades: [{ nome: "Orindiúva", kmMin: 0, kmMax: 3.870, admin: "Estadual" }] },
-            "SPA-540/322": { orientacao: "N-S", trechos: [{ nome: "SEM DENOMINAÇÃO", kmMin: 0, kmMax: 4.240, admin: "Estadual" }], cidades: [{ nome: "Paulo de Faria", kmMin: 0, kmMax: 4.240, admin: "Estadual" }] },
-            "SPA-542/322": { orientacao: "N-S", trechos: [{ nome: "Teófilo Jaquim Ribeiro", kmMin: 0, kmMax: 0.660, admin: "Estadual" }], cidades: [{ nome: "Paulo de Faria", kmMin: 0, kmMax: 0.660, admin: "Estadual" }] },
-            "SPD-014/353": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 0.900, admin: "Estadual" }], cidades: [{ nome: "Terra Roxa", kmMin: 0, kmMax: 0.900, admin: "Estadual" }] },
-            "SPD-047/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 2.050, admin: "Estadual" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 2.050, admin: "Estadual" }] },
-            "SPD-058/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 1.720, admin: "Estadual" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 1.720, admin: "Estadual" }] },
-            "SPD-060/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 1.410, admin: "Estadual" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 1.410, admin: "Estadual" }] },
-            "SPD-061/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 2.030, admin: "Estadual" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 2.030, admin: "Estadual" }] },
-            "SPD-066/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 0.670, admin: "Estadual" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 0.670, admin: "Estadual" }] },
-            "SPD-069/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 0.810, admin: "Estadual" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 0.810, admin: "Estadual" }] },
-            "SPD-074/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 1.160, admin: "Estadual" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 1.160, admin: "Estadual" }] },
-            "SPD-080/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 2.470, admin: "Estadual" }], cidades: [{ nome: "Guaíra", kmMin: 0, kmMax: 2.470, admin: "Estadual" }] },
-            "SPD-083/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 0.910, admin: "Estadual" }], cidades: [{ nome: "Barretos", kmMin: 0, kmMax: 0.910, admin: "Estadual" }] },
-            "SPD-092/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 2.230, admin: "Estadual" }], cidades: [{ nome: "Barretos", kmMin: 0, kmMax: 2.230, admin: "Estadual" }] },
-            "SPD-094/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 1.800, admin: "Estadual" }], cidades: [{ nome: "Barretos", kmMin: 0, kmMax: 1.800, admin: "Estadual" }] },
-            "SPD-097/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 2.910, admin: "Estadual" }], cidades: [{ nome: "Barretos", kmMin: 0, kmMax: 2.910, admin: "Estadual" }] },
-            "SPD-098/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 2.160, admin: "Estadual" }], cidades: [{ nome: "Barretos", kmMin: 0, kmMax: 2.160, admin: "Estadual" }] },
-            "SPD-100/425": { orientacao: "N-S", trechos: [{ nome: "Sem Denominação", kmMin: 0, kmMax: 1.940, admin: "Estadual" }], cidades: [{ nome: "Barretos", kmMin: 0, kmMax: 1.940, admin: "Estadual" }] }
+            "SP-425": { orientacao: "L-O", trechos: [{ nome: "Assis Chateaubriand", kmMin: 42, kmMax: 158, admin: "DER" }], cidades: [{ nome: "Guaíra", kmMin: 42, kmMax: 81, admin: "DER" }, { nome: "Barretos", kmMin: 81, kmMax: 128, admin: "DER" }, { nome: "Olímpia", kmMin: 128, kmMax: 158, admin: "DER" }] }
         };
 
-        let totaisAno = { '2024': 0, '2025': 0, '2026': 0 };
+        const SENHA_MASTER = "3BPRvC"; 
+
+        // --- DADOS DINÂMICOS (Firebase) ---
         let arrayOcorrencias = []; 
+        let totaisAno = {}; 
+        let usuariosCadastrados = { [SENHA_MASTER]: "master" }; 
         let chartPizzaInstance = null;
-        
-        // SISTEMA DE USUÁRIOS E PERMISSÕES
-        let usuariosCadastrados = JSON.parse(localStorage.getItem('bprv_usuarios')) || { "3BPRvC": "master" };
-        let roleSessao = null; // Guarda se o usuário atual é 'master' ou 'admin'
+        let roleSessao = null; 
 
-        window.onload = function() {
-            renderizarPlacares();
-            const select = document.getElementById('rodoviaSelect');
-            for (let sigla in bancoRodovias) {
-                let option = document.createElement('option');
-                option.value = sigla;
-                option.text = sigla;
-                select.appendChild(option);
+        // --- SINCRONIZAÇÃO DE USUÁRIOS ---
+        onValue(ref(db, '/usuarios'), (snapshot) => {
+            const dados = snapshot.val();
+            usuariosCadastrados = { [SENHA_MASTER]: "master" };
+            if (dados) {
+                Object.assign(usuariosCadastrados, dados);
             }
-        };
+        });
 
-        // Função Central de Verificação de Senhas e Permissões
+        // Função de verificação de acesso
         function solicitarAcesso(acaoRequerida) {
-            // Se já tem permissão master na sessão, libera tudo
             if (roleSessao === 'master') return true;
-            
-            // Se já for admin na sessão e só quer apagar/editar, libera
             if (roleSessao === 'admin' && (acaoRequerida === 'apagar' || acaoRequerida === 'editar')) return true;
 
-            // Se não tem permissão suficiente na sessão, pede a senha
-            let senhaInput = prompt("🔒 Área Restrita. Digite sua senha de acesso:");
+            let senhaInput = prompt("🔒 Área Restrita. Digite sua senha:");
             if (!senhaInput) return false;
 
             if (usuariosCadastrados[senhaInput]) {
                 let roleEncontrado = usuariosCadastrados[senhaInput];
-                
-                // Se o usuário quer acessar algo exclusivo de Master e não é Master
                 if ((acaoRequerida === 'relatorio' || acaoRequerida === 'gerenciar') && roleEncontrado !== 'master') {
-                    alert("❌ Acesso Negado: Apenas o Administrador Master pode acessar esta função.");
+                    alert("❌ Acesso Negado: Apenas Master.");
                     return false;
                 }
-
-                // Autorizado! Atualiza a sessão
                 roleSessao = roleEncontrado;
                 return true;
             } else {
@@ -359,81 +333,47 @@
 
         function criarNovoAdmin() {
             if (solicitarAcesso('gerenciar')) {
-                let novaSenha = prompt("⚙️ GERENCIADOR DE ACESSO\n\nDigite uma NOVA SENHA para o sub-administrador (ele terá permissão apenas para editar e apagar ocorrências):");
-                
+                let novaSenha = prompt("⚙️ GERENCIADOR DE ACESSO\n\nNova SENHA para sub-admin:");
                 if (novaSenha) {
                     if (usuariosCadastrados[novaSenha]) {
-                        alert("⚠️ Esta senha já está cadastrada no sistema.");
+                        alert("⚠️ Senha já cadastrada.");
                     } else {
-                        usuariosCadastrados[novaSenha] = "admin";
-                        localStorage.setItem('bprv_usuarios', JSON.stringify(usuariosCadastrados));
-                        alert("✅ Sub-Administrador criado com sucesso! Ele já pode usar esta senha para editar ou apagar registros.");
+                        // Salva no Firebase nó /usuarios
+                        set(ref(db, '/usuarios/' + novaSenha), "admin")
+                        .then(() => alert("✅ Sub-Admin criado!"))
+                        .catch((e) => alert("❌ Erro: " + e));
                     }
                 }
             }
         }
 
-        function tentarAcessarRelatorio() {
-            if (solicitarAcesso('relatorio')) {
-                mudarAba('relatorio');
-            }
-        }
+        // --- SINCRONIZAÇÃO DE OCORRÊNCIAS EM TEMPO REAL ---
+        onValue(ref(db, '/ocorrencias'), (snapshot) => {
+            const dados = snapshot.val();
+            arrayOcorrencias = [];
+            totaisAno = {};
 
-        function apagarRegistro(index) {
-            if (solicitarAcesso('apagar')) {
-                if(confirm("🗑️ Deseja realmente apagar este lançamento?")) {
-                    let ocorr = arrayOcorrencias[index];
-                    if(ocorr && ocorr.fatal === 'Sim') {
-                        totaisAno[ocorr.anoData] -= ocorr.obitos;
+            if (dados) {
+                // Firebase gera chaves únicas (push IDs), iteramos sobre o objeto
+                for (let key in dados) {
+                    const ocorrencia = dados[key];
+                    // Mantém a ID do Firebase no objeto local
+                    ocorrencia.id = key; 
+                    arrayOcorrencias.push(ocorrencia);
+
+                    // Recalcula totais
+                    if (ocorrencia.fatal === 'Sim') {
+                        const ano = ocorrencia.anoData;
+                        if (!totaisAno[ano]) totaisAno[ano] = 0;
+                        totaisAno[ano] += (ocorrencia.obitos || 0);
                     }
-                    arrayOcorrencias.splice(index, 1);
-                    alert("Lançamento apagado com sucesso.");
-                    atualizarTabelaGeral();
-                    renderizarPlacares();
                 }
             }
-        }
+            atualizarTabelaGeral();
+            renderizarPlacares();
+        });
 
-        function editarRegistro(index) {
-            if (solicitarAcesso('editar')) {
-                let ocorr = arrayOcorrencias[index];
-                
-                // Devolve os dados para os inputs
-                document.getElementById('rePolicial').value = ocorr.re;
-                
-                // A data está em formato DD/MM/YYYY na tabela, precisamos inverter para YYYY-MM-DD pro input
-                let partesData = ocorr.data.split('/');
-                document.getElementById('dataAcidente').value = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
-                
-                document.getElementById('rodoviaSelect').value = ocorr.siglaRodovia;
-                atualizarSentidos(); // Atualiza a lista de sentidos dependendo da rodovia escolhida
-                
-                document.getElementById('kmExato').value = ocorr.kmExatoStr;
-                document.getElementById('sentido').value = ocorr.sentido;
-                document.getElementById('tipoAcidente').value = ocorr.tipo;
-                
-                document.getElementById('vitimaFatal').value = ocorr.fatal;
-                verificarFatal();
-                if(ocorr.fatal === 'Sim') document.getElementById('qtdObitos').value = ocorr.obitos;
-
-                // Devolve os veículos
-                for (let v in ocorr.veiculos) {
-                    let inputV = document.getElementById(`qtd_${v}`);
-                    if(inputV) inputV.value = ocorr.veiculos[v];
-                }
-
-                // Remove o registro atual da matriz, pois o policial vai "Gravar Ocorrência" de novo
-                if(ocorr.fatal === 'Sim') totaisAno[ocorr.anoData] -= ocorr.obitos;
-                arrayOcorrencias.splice(index, 1);
-                
-                atualizarTabelaGeral();
-                renderizarPlacares();
-                
-                alert("✏️ Modo Edição:\nOs dados da ocorrência foram carregados no formulário. Altere o que for necessário e clique em 'Gravar Ocorrência' para salvar.");
-                window.scrollTo(0, 0); // Sobe a tela para o topo
-            }
-        }
-
+        // --- FUNÇÕES UI ---
         function renderizarPlacares() {
             const painel = document.getElementById('painel-placares');
             painel.innerHTML = ''; 
@@ -453,37 +393,26 @@
 
         function formatarVeiculosStr(veiculosObj) {
             let lista = [];
-            for (let tipo in veiculosObj) {
-                if (veiculosObj[tipo] > 0) {
-                    lista.push(`${veiculosObj[tipo]} ${tipo}(s)`);
-                }
-            }
-            return lista.length > 0 ? lista.join(', ') : 'Nenhum informado';
+            for (let tipo in veiculosObj) { if (veiculosObj[tipo] > 0) lista.push(`${veiculosObj[tipo]} ${tipo}(s)`); }
+            return lista.length > 0 ? lista.join(', ') : 'Nenhum';
         }
 
         function atualizarTabelaGeral() {
             const tbody = document.getElementById('tabela-dados');
             tbody.innerHTML = '';
             if (arrayOcorrencias.length === 0) {
-                tbody.innerHTML = `<tr id="empty-row"><td colspan="5" class="empty-state">Nenhuma ocorrência registrada.</td></tr>`;
+                tbody.innerHTML = `<tr id="empty-row"><td colspan="5" class="empty-state">Nenhuma ocorrência.</td></tr>`;
                 return;
             }
             arrayOcorrencias.forEach((ac, idx) => {
                 let tr = document.createElement('tr');
                 let badgeClass = ac.fatal === 'Sim' ? 'badge-sim' : 'badge-nao';
-                let textoBadge = ac.fatal === 'Sim' ? `Sim (${ac.obitos})` : 'Não';
                 let veiculosTexto = formatarVeiculosStr(ac.veiculos);
-
                 tr.innerHTML = `
                     <td><strong>${ac.data}</strong><br><span class="badge-re">RE: ${ac.re}</span></td>
                     <td><span style="color: #2980b9; font-weight: 600;">${ac.siglaRodovia}</span><br><small>KM ${ac.kmExatoStr} - ${ac.sentido}</small></td>
-                    <td>
-                        <strong>${ac.tipo}</strong><br>
-                        <small style="color: #555;">🚗 ${veiculosTexto}</small><br>
-                        <small style="color: #2c3e50; font-weight: bold;">📍 ${ac.cidade}</small><br>
-                        <small style="color: #d35400; font-weight: bold;">🏢 Adm: ${ac.admin}</small>
-                    </td>
-                    <td><span class="badge ${badgeClass}">${textoBadge}</span></td>
+                    <td><strong>${ac.tipo}</strong><br><small>🚗 ${veiculosTexto}</small><br><small>📍 ${ac.cidade}</small><br><small>🏢 Adm: ${ac.admin}</small></td>
+                    <td><span class="badge ${badgeClass}">Sim (${ac.obitos})</span></td>
                     <td class="acoes-td">
                         <button class="btn-editar" onclick="editarRegistro(${idx})">✏️ Editar</button>
                         <button class="btn-apagar" onclick="apagarRegistro(${idx})">🗑️ Apagar</button>
@@ -497,408 +426,153 @@
             const sigla = document.getElementById('rodoviaSelect').value;
             const selectSentido = document.getElementById('sentido');
             selectSentido.innerHTML = '<option value="">Selecione...</option>';
-            
             if (sigla) {
+                const rodovia = bancoRodovias[sigla];
                 if (sigla.startsWith('SPA') || sigla.startsWith('SPD')) {
-                    const rodovia = bancoRodovias[sigla];
                     let municipios = [...new Set(rodovia.cidades.map(c => c.nome))];
                     let nomeMun = municipios.join(' / ');
-                    
                     selectSentido.innerHTML += `<option value="Acesso a ${nomeMun}">Acesso a ${nomeMun}</option>`;
                     selectSentido.innerHTML += `<option value="Retorno de ${nomeMun}">Retorno de ${nomeMun}</option>`;
                 } else {
-                    const orientacao = bancoRodovias[sigla].orientacao;
+                    const orientacao = rodovia.orientacao;
                     if (orientacao === "N-S") {
-                        selectSentido.innerHTML += '<option value="Norte">Norte (Aumenta KM)</option>';
-                        selectSentido.innerHTML += '<option value="Sul">Sul (Diminui KM)</option>';
+                        selectSentido.innerHTML += '<option value="Norte">Norte (+ KM)</option><option value="Sul">- KM</option>';
                     } else {
-                        selectSentido.innerHTML += '<option value="Oeste">Oeste (Aumenta KM)</option>';
-                        selectSentido.innerHTML += '<option value="Leste">Leste (Diminui KM)</option>';
+                        selectSentido.innerHTML += '<option value="Oeste">Oeste (+ KM)</option><option value="Leste">- KM</option>';
                     }
                 }
-            } else {
-                selectSentido.innerHTML = '<option value="">Selecione a rodovia primeiro...</option>';
             }
         }
 
         function verificarFatal() {
-            const vitimaFatal = document.getElementById('vitimaFatal').value;
-            const divQtd = document.getElementById('divQtdObitos');
-            if(vitimaFatal === 'Sim') {
-                divQtd.style.display = 'flex';
-                document.getElementById('qtdObitos').value = 1;
-            } else {
-                divQtd.style.display = 'none';
-                document.getElementById('qtdObitos').value = 0;
-            }
+            const fatal = document.getElementById('vitimaFatal').value;
+            document.getElementById('divQtdObitos').style.display = (fatal === 'Sim' ? 'flex' : 'none');
         }
 
-        function mudarAba(abaId) {
-            document.getElementById('aba-lancamento').style.display = abaId === 'lancamento' ? 'block' : 'none';
-            document.getElementById('aba-relatorio').style.display = abaId === 'relatorio' ? 'block' : 'none';
-            document.getElementById('btn-aba-lancamento').className = abaId === 'lancamento' ? 'tab-btn active' : 'tab-btn';
-            document.getElementById('btn-aba-relatorio').className = abaId === 'relatorio' ? 'tab-btn active' : 'tab-btn';
-
-            if(abaId === 'relatorio') {
-                gerarRelatorioGrafico();
-            }
-        }
-
-        function extrairKm(kmString) {
-            let limpo = kmString.replace('+', '.').replace(/[^\d.]/g, '');
-            return parseFloat(limpo);
-        }
-
-        function formatarData(dataString) {
-            if(!dataString) return "";
-            const partes = dataString.split('-');
-            return `${partes[2]}/${partes[1]}/${partes[0]}`;
-        }
-
-        function descobrirCidade(sigla, km) {
-            const rodovia = bancoRodovias[sigla];
-            for (let i = 0; i < rodovia.cidades.length; i++) {
-                if (km >= rodovia.cidades[i].kmMin && km <= rodovia.cidades[i].kmMax) {
-                    return rodovia.cidades[i].nome;
-                }
-            }
-            return "Município não identificado";
-        }
-
-        function descobrirAdmin(sigla, km) {
-            const rodovia = bancoRodovias[sigla];
-            for (let i = 0; i < rodovia.cidades.length; i++) {
-                if (km >= rodovia.cidades[i].kmMin && km <= rodovia.cidades[i].kmMax) {
-                    return rodovia.cidades[i].admin;
-                }
-            }
-            for (let i = 0; i < rodovia.trechos.length; i++) {
-                if (km >= rodovia.trechos[i].kmMin && km <= rodovia.trechos[i].kmMax) {
-                    return rodovia.trechos[i].admin;
-                }
-            }
-            return "Não especificado";
-        }
-
-        function descobrirTrecho(sigla, km) {
-            const rodovia = bancoRodovias[sigla];
-            for (let i = 0; i < rodovia.trechos.length; i++) {
-                let trecho = rodovia.trechos[i];
-                if (km >= trecho.kmMin && km <= trecho.kmMax) {
-                    return trecho;
-                }
-            }
-            return { nome: "Trecho não cadastrado", kmMin: Math.floor(km) - 10, kmMax: Math.floor(km) + 10, admin: "DER" };
-        }
-
+        // --- LÓGICA DE DADOS (Firebase) ---
         function adicionarRegistro() {
             const siglaRodovia = document.getElementById('rodoviaSelect').value;
             const kmExatoStr = document.getElementById('kmExato').value;
             const sentido = document.getElementById('sentido').value;
-            const vitimaFatal = document.getElementById('vitimaFatal').value;
-            let qtdObitos = parseInt(document.getElementById('qtdObitos').value) || 0;
+            const fatal = document.getElementById('vitimaFatal').value;
+            let obitos = parseInt(document.getElementById('qtdObitos').value) || 0;
             const dataInput = document.getElementById('dataAcidente').value;
-            const rePolicial = document.getElementById('rePolicial').value;
+            const re = document.getElementById('rePolicial').value;
             const tipo = document.getElementById('tipoAcidente').value;
+            const veiculosObj = { "Automóvel": parseInt(document.getElementById('qtd_Automóvel').value) || 0, "Motocicleta": parseInt(document.getElementById('qtd_Motocicleta').value) || 0, "Caminhão": parseInt(document.getElementById('qtd_Caminhão').value) || 0, "Ônibus": parseInt(document.getElementById('qtd_Ônibus').value) || 0, "Bicicleta": parseInt(document.getElementById('qtd_Bicicleta').value) || 0, "Pedestre": parseInt(document.getElementById('qtd_Pedestre').value) || 0 };
 
-            const veiculosObj = {
-                "Automóvel": parseInt(document.getElementById('qtd_Automóvel').value) || 0,
-                "Motocicleta": parseInt(document.getElementById('qtd_Motocicleta').value) || 0,
-                "Caminhão": parseInt(document.getElementById('qtd_Caminhão').value) || 0,
-                "Ônibus": parseInt(document.getElementById('qtd_Ônibus').value) || 0,
-                "Bicicleta": parseInt(document.getElementById('qtd_Bicicleta').value) || 0,
-                "Pedestre": parseInt(document.getElementById('qtd_Pedestre').value) || 0
+            if (!siglaRodovia || !kmExatoStr || !sentido || !dataInput || !re || !tipo) { alert('Preencha campos obrigatórios.'); return; }
+
+            const kmAcidente = parseFloat(kmExatoStr.replace('+', '.').replace(/[^\d.]/g, ''));
+            const partesData = dataInput.split('-');
+
+            const novaOcorrencia = {
+                siglaRodovia, kmAcidente, kmExatoStr, sentido, obitos: (fatal === 'Sim' ? obitos : 0),
+                data: `${partesData[2]}/${partesData[1]}/${partesData[0]}`,
+                anoData: partesData[0], tipo, veiculos: veiculosObj, fatal, re,
+                cidade: descobrirCidade(siglaRodovia, kmAcidente),
+                admin: descobrirAdmin(siglaRodovia, kmAcidente),
+                trechoNome: descobrirTrecho(siglaRodovia, kmAcidente).nome
             };
 
-            let totalVeiculos = Object.values(veiculosObj).reduce((a, b) => a + b, 0);
-
-            if (vitimaFatal === 'Não') qtdObitos = 0;
-
-            if (!siglaRodovia || !kmExatoStr || !sentido || !dataInput || !rePolicial || !tipo || totalVeiculos === 0) {
-                alert('Preencha os campos obrigatórios e informe pelo menos 1 veículo ou parte envolvida.');
-                return;
-            }
-
-            const kmAcidente = extrairKm(kmExatoStr);
-            const cidadeEncontrada = descobrirCidade(siglaRodovia, kmAcidente);
-            const adminEncontrada = descobrirAdmin(siglaRodovia, kmAcidente);
-            const trechoEncontrado = descobrirTrecho(siglaRodovia, kmAcidente);
-            const ano = dataInput.split('-')[0];
-            const dataFormatada = formatarData(dataInput);
-
-            if (vitimaFatal === 'Sim' && qtdObitos > 0) {
-                if (totaisAno[ano] === undefined) { totaisAno[ano] = 0; }
-                totaisAno[ano] += qtdObitos;
-                renderizarPlacares();
-            }
-
-            arrayOcorrencias.push({
-                siglaRodovia: siglaRodovia,
-                kmAcidente: kmAcidente,
-                kmExatoStr: kmExatoStr,
-                sentido: sentido,
-                obitos: qtdObitos,
-                data: dataFormatada,
-                anoData: ano,
-                tipo: tipo,
-                veiculos: veiculosObj,
-                fatal: vitimaFatal,
-                re: rePolicial,
-                cidade: cidadeEncontrada,
-                admin: adminEncontrada,
-                trechoNome: trechoEncontrado.nome
-            });
-
-            atualizarTabelaGeral();
-
-            ['Automóvel', 'Motocicleta', 'Caminhão', 'Ônibus', 'Bicicleta', 'Pedestre'].forEach(v => {
-                document.getElementById(`qtd_${v}`).value = 0;
-            });
-            document.getElementById('kmExato').value = '';
-            document.getElementById('vitimaFatal').value = 'Não';
-            verificarFatal(); 
-            alert("✅ Ocorrência gravada com sucesso!");
+            // Salva no Firebase nó /ocorrencias com push()
+            push(ref(db, '/ocorrencias'), novaOcorrencia)
+            .then(() => {
+                alert("✅ Gravado!");
+                ['Automóvel', 'Motocicleta', 'Caminhão', 'Ônibus', 'Bicicleta', 'Pedestre'].forEach(v => document.getElementById(`qtd_${v}`).value = 0);
+                document.getElementById('kmExato').value = ''; document.getElementById('vitimaFatal').value = 'Não'; verificarFatal(); 
+            })
+            .catch((e) => alert("❌ Erro: " + e));
         }
 
+        function apagarRegistro(index) {
+            if (solicitarAcesso('apagar')) {
+                if(confirm("🗑️ Apagar lançamento?")) {
+                    let ocorr = arrayOcorrencias[index];
+                    // Remove do Firebase usando a ID
+                    remove(ref(db, '/ocorrencias/' + ocorr.id))
+                    .then(() => alert("🗑️ Apagado."))
+                    .catch((e) => alert("❌ Erro: " + e));
+                }
+            }
+        }
+
+        function editarRegistro(index) {
+            if (solicitarAcesso('editar')) {
+                let ocorr = arrayOcorrencias[index];
+                document.getElementById('rePolicial').value = ocorr.re;
+                let partesData = ocorr.data.split('/');
+                document.getElementById('dataAcidente').value = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
+                document.getElementById('rodoviaSelect').value = ocorr.siglaRodovia;
+                atualizarSentidos(); 
+                document.getElementById('kmExato').value = ocorr.kmExatoStr;
+                document.getElementById('sentido').value = ocorr.sentido;
+                document.getElementById('tipoAcidente').value = ocorr.tipo;
+                document.getElementById('vitimaFatal').value = ocorr.fatal;
+                verificarFatal();
+                if(ocorr.fatal === 'Sim') document.getElementById('qtdObitos').value = ocorr.obitos;
+                for (let v in ocorr.veiculos) { if(document.getElementById(`qtd_${v}`)) document.getElementById(`qtd_${v}`).value = ocorr.veiculos[v]; }
+
+                // Lógica de edição: apaga o original e preenche o form (remove-add)
+                remove(ref(db, '/ocorrencias/' + ocorr.id))
+                .then(() => { alert("✏️ Altere e grave novamente."); window.scrollTo(0, 0); })
+                .catch((e) => alert("❌ Erro ao editar: " + e));
+            }
+        }
+
+        // --- RELATÓRIO (Mapas e Gráfico) ---
         function gerarRelatorioGrafico() {
-            const container = document.getElementById('lista-mapas');
-            container.innerHTML = ''; 
-
-            let ocorrenciasFatais = arrayOcorrencias.filter(o => o.fatal === 'Sim');
-            montarGraficoPizza(ocorrenciasFatais);
-
-            if (ocorrenciasFatais.length === 0) {
-                container.innerHTML = '<p class="empty-state">Nenhum sinistro fatal registrado para gerar o relatório gráfico.</p>';
-                return;
-            }
-
-            let rodoviasUnicas = [...new Set(ocorrenciasFatais.map(o => o.siglaRodovia))];
-
-            rodoviasUnicas.forEach(sigla => {
-                let acidentes = ocorrenciasFatais.filter(o => o.siglaRodovia === sigla);
-                let infoRodovia = bancoRodovias[sigla];
-                
-                let labelEsquerda = '';
-                let labelDireita = '';
-
-                if (sigla.startsWith('SPA') || sigla.startsWith('SPD')) {
-                    let nomeMun = [...new Set(infoRodovia.cidades.map(c => c.nome))].join(' / ');
-                    labelEsquerda = '⬅ Início do Acesso';
-                    labelDireita = `Sentido ${nomeMun} ➡`;
-                } else {
-                    labelEsquerda = infoRodovia.orientacao === 'N-S' ? '⬅ SUL (Diminui KM)' : '⬅ LESTE (Diminui KM)';
-                    labelDireita = infoRodovia.orientacao === 'N-S' ? 'NORTE (Aumenta KM) ➡' : 'OESTE (Aumenta KM) ➡';
-                }
-
-                let minKm = infoRodovia.trechos[0].kmMin;
-                let maxKm = infoRodovia.trechos[infoRodovia.trechos.length - 1].kmMax;
-                let diferenca = maxKm - minKm;
-
-                let divBlocoCompleto = document.createElement('div');
-                divBlocoCompleto.className = 'mapa-bloco-completo';
-
-                let htmlMapa = `
-                <div class="road-map-wrapper">
-                    <div class="road-map-title">${infoRodovia.trechos[0].nome.split('-')[0].trim()} (Trecho da Região)</div>
-                    
-                    <div class="road-directions-container">
-                        <div class="arrow-shape">${labelEsquerda}</div>
-                        <div class="arrow-shape">${labelDireita}</div>
-                    </div>
-
-                    <div class="road-cities-container"></div>
-                    
-                    <div class="road-track">
-                        <div class="road-centerline"></div>
-                    </div>
-                    
-                    <div class="road-scale-container"></div>
-                </div>`;
-                
-                divBlocoCompleto.innerHTML = htmlMapa;
-                
-                let pista = divBlocoCompleto.querySelector('.road-track');
-                let regua = divBlocoCompleto.querySelector('.road-scale-container');
-                let cidadesContainer = divBlocoCompleto.querySelector('.road-cities-container');
-                
-                let passo = diferenca > 100 ? 10 : (diferenca > 40 ? 5 : 2); 
-                for (let i = minKm; i <= maxKm; i += passo) {
-                    let percentual = ((i - minKm) / diferenca) * 100;
-                    let marca = document.createElement('div');
-                    marca.className = 'scale-mark';
-                    marca.style.left = `${percentual}%`;
-                    marca.innerText = i;
-                    regua.appendChild(marca);
-                }
-
-                infoRodovia.cidades.forEach(cidade => {
-                    let overlapMin = Math.max(cidade.kmMin, minKm);
-                    let overlapMax = Math.min(cidade.kmMax, maxKm);
-                    if(overlapMin < overlapMax) {
-                        let largura = ((overlapMax - overlapMin) / diferenca) * 100;
-                        let inicio = ((overlapMin - minKm) / diferenca) * 100;
-                        
-                        let blocoCidade = document.createElement('div');
-                        blocoCidade.className = 'city-block';
-                        blocoCidade.style.left = `${inicio}%`;
-                        blocoCidade.style.width = `${largura}%`;
-                        blocoCidade.innerText = `${cidade.nome} (${cidade.admin})`;
-                        cidadesContainer.appendChild(blocoCidade);
-                    }
-                });
-
-                acidentes.forEach(acidente => {
-                    let percentPosition = ((acidente.kmAcidente - minKm) / diferenca) * 100;
-                    let dot = document.createElement('div');
-                    dot.className = 'victim-dot';
-                    dot.style.left = `${percentPosition}%`;
-
-                    if(acidente.sentido === "Leste" || acidente.sentido === "Sul" || acidente.sentido.startsWith("Retorno")) {
-                        dot.style.top = '25%'; 
-                    } else {
-                        dot.style.top = '75%';
-                    }
-                    pista.appendChild(dot);
-                });
-
-                let totalObitosRodovia = 0;
-                let htmlResumo = `
-                <table class="table-resumo">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>KM Exato</th>
-                            <th>Sentido</th>
-                            <th>Dinâmica / Veículos / Local / Adm</th>
-                            <th>Óbitos</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
-                
-                acidentes.forEach(ac => {
-                    let veiculosTexto = formatarVeiculosStr(ac.veiculos);
-                    htmlResumo += `
-                        <tr>
-                            <td>${ac.data}</td>
-                            <td><strong>${ac.kmExatoStr}</strong></td>
-                            <td>${ac.sentido}</td>
-                            <td>
-                                <strong>${ac.tipo}</strong><br>
-                                <small style="color: #555;">🚗 ${veiculosTexto}</small><br>
-                                <small style="color: #2c3e50;">📍 ${ac.cidade}</small><br>
-                                <small style="color: #c0392b;">🏢 Adm: ${ac.admin}</small>
-                            </td>
-                            <td style="color: #c0392b; font-weight: bold;">${ac.obitos}</td>
-                        </tr>`;
-                    totalObitosRodovia += ac.obitos;
-                });
-
-                htmlResumo += `
-                        <tr>
-                            <td colspan="4" style="text-align: right; background-color: #f1f2f6;"><strong>TOTAL DE VÍTIMAS FATAIS (${sigla}):</strong></td>
-                            <td style="background-color: #f1f2f6; color: #c0392b; font-size: 1.1rem;"><strong>${totalObitosRodovia}</strong></td>
-                        </tr>
-                    </tbody>
-                </table>`;
-
-                divBlocoCompleto.innerHTML += htmlResumo;
-                container.appendChild(divBlocoCompleto);
+            const container = document.getElementById('lista-mapas'); container.innerHTML = ''; 
+            let fat = arrayOcorrencias.filter(o => o.fatal === 'Sim');
+            montarGraficoPizza(fat);
+            if (fat.length === 0) { container.innerHTML = '<p class="empty-state">Nenhum sinistro fatal.</p>'; return; }
+            [...new Set(fat.map(o => o.siglaRodovia))].forEach(sigla => {
+                let ac = fat.filter(o => o.siglaRodovia === sigla);
+                let rod = bancoRodovias[sigla];
+                let lEsq = (sigla.startsWith('SPA') || sigla.startsWith('SPD') ? '⬅ Início' : (rod.orientacao==='N-S'?'⬅ SUL':'⬅ LESTE'));
+                let lDir = (sigla.startsWith('SPA') || sigla.startsWith('SPD') ? `Sentido ${[...new Set(rod.cidades.map(c=>c.nome))].join('/')} ➡` : (rod.orientacao==='N-S'?'NORTE ➡':'OESTE ➡'));
+                let min = rod.trechos[0].kmMin, max = rod.trechos[rod.trechos.length-1].kmMax, dif = max-min;
+                let bloco = document.createElement('div'); bloco.className = 'mapa-bloco-completo';
+                bloco.innerHTML = `<div class="road-map-wrapper"><div class="road-map-title">${rod.trechos[0].nome.split('-')[0]}</div><div class="road-directions-container"><div class="arrow-shape">${lEsq}</div><div class="arrow-shape">${lDir}</div></div><div class="road-cities-container"></div><div class="road-track"><div class="road-centerline"></div></div><div class="road-scale-container"></div></div>`;
+                let pista = bloco.querySelector('.road-track'), regua = bloco.querySelector('.road-scale-container'), cidCont = bloco.querySelector('.road-cities-container');
+                let passo = dif > 100 ? 10 : (dif > 40 ? 5 : 2); 
+                for (let i = min; i <= max; i += passo) { let percent = ((i-min)/dif)*100; let marca = document.createElement('div'); marca.className='scale-mark'; marca.style.left=`${percent}%`; marca.innerText=i; regua.appendChild(marca); }
+                rod.cidades.forEach(c => { let oMin = Math.max(c.kmMin, min), oMax = Math.min(c.kmMax, max); if(oMin < oMax) { let larg = ((oMax-oMin)/dif)*100, ini = ((oMin-min)/dif)*100; let bCid = document.createElement('div'); bCid.className='city-block'; bCid.style.left=`${ini}%`; bCid.style.width=`${larg}%`; bCid.innerText=`${c.nome} (${c.admin})`; cidCont.appendChild(bCid); } });
+                ac.forEach(a => { let percent = ((a.kmAcidente-min)/dif)*100, dot = document.createElement('div'); dot.className='victim-dot'; dot.style.left=`${percent}%`; dot.style.top = (a.sentido==='Leste'||a.sentido==='Sul'||a.sentido.startsWith('Retorno')?'25%':'75%'); pista.appendChild(dot); });
+                let totalRod = 0, htmlRes = '<table class="table-resumo"><thead><tr><th>Data<th>KM<th>Sentido<th>Dados<th>Óbitos</thead><tbody>';
+                ac.forEach(a => { htmlRes += `<tr><td>${a.data}<td><strong>${a.kmExatoStr}</strong><td>${a.sentido}<td><strong>${a.tipo}</strong><br><small>🚗 ${formatarVeiculosStr(a.veiculos)}</small><br><small>📍 ${a.cidade} (${a.admin})</small><td style="color:#c0392b;font-weight:bold">${a.obitos}`; totalRod += a.obitos; });
+                bloco.innerHTML += htmlRes + `<tr><td colspan="4" style="text-align:right"><strong>TOTAL (${sigla}):</strong><td style="color:#c0392b;font-size:1.1rem"><strong>${totalRod}</table>`;
+                container.appendChild(bloco);
             });
         }
 
-        function montarGraficoPizza(ocorrenciasFatais) {
-            let contagemTipos = {};
-            let totalGeralObitos = 0;
-            
-            ocorrenciasFatais.forEach(o => {
-                contagemTipos[o.tipo] = (contagemTipos[o.tipo] || 0) + o.obitos;
-                totalGeralObitos += o.obitos;
-            });
-
-            let labels = Object.keys(contagemTipos);
-            let valores = Object.values(contagemTipos);
-
-            const ctx = document.getElementById('graficoPizza').getContext('2d');
-            if (chartPizzaInstance) { chartPizzaInstance.destroy(); }
-
-            chartPizzaInstance = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: labels.length > 0 ? labels : ['Sem dados'],
-                    datasets: [{
-                        data: valores.length > 0 ? valores : [1],
-                        backgroundColor: ['#c0392b', '#2980b9', '#f39c12', '#27ae60', '#8e44ad', '#d35400', '#7f8c8d']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        datalabels: {
-                            color: '#fff',
-                            font: { weight: 'bold', size: 12 },
-                            formatter: (value, ctx) => {
-                                if (totalGeralObitos === 0) return '0%';
-                                let percentage = ((value / totalGeralObitos) * 100).toFixed(1) + '%';
-                                return percentage;
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    let value = context.raw || 0;
-                                    let percentage = totalGeralObitos > 0 ? ((value / totalGeralObitos) * 100).toFixed(1) : 0;
-                                    return `${label}: ${value} óbitos (${percentage}%)`;
-                                }
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
+        function montarGraficoPizza(fat) {
+            let tip = {}, tot = 0; fat.forEach(o => { tip[o.tipo] = (tip[o.tipo]||0) + o.obitos; tot += o.obitos; });
+            const ctx = document.getElementById('graficoPizza').getContext('2d'); if (chartPizzaInstance) chartPizzaInstance.destroy();
+            chartPizzaInstance = new Chart(ctx, { type: 'pie', data: { labels: Object.keys(tip), datasets: [{ data: Object.values(tip), backgroundColor: ['#c0392b','#2980b9','#f39c12','#27ae60','#8e44ad','#d35400','#7f8c8d'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, datalabels: { color:'#fff', font:{weight:'bold'}, formatter:(v)=> tot>0?((v/tot)*100).toFixed(1)+'%':'0%' } } }, plugins: [ChartDataLabels] });
         }
 
-        function prepararLayoutParaPDF(elemento) {
-            const wrappers = elemento.querySelectorAll('.road-map-wrapper');
-            wrappers.forEach(w => {
-                w.style.overflowX = 'visible';
-                w.style.width = 'max-content'; 
-            });
-        }
-
+        // --- EXPORTAÇÃO ---
         function baixarPDF() {
             if (solicitarAcesso('relatorio')) {
-                const elemento = document.getElementById('area-pdf');
-                const cabecalho = document.getElementById('cabecalho-pdf');
-                
-                let containerClone = document.createElement('div');
-                containerClone.appendChild(cabecalho.cloneNode(true));
-                
-                let graficoClone = document.querySelector('.chart-box').cloneNode(true);
-                containerClone.appendChild(graficoClone);
-
-                containerClone.appendChild(elemento.cloneNode(true));
-                prepararLayoutParaPDF(containerClone);
-
-                const opt = {
-                    margin:       10,
-                    filename:     'Relatorio_Indicador_Fatais_BPRv.pdf',
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, windowWidth: 1200 }, 
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' } 
-                };
-
-                html2pdf().set(opt).from(containerClone).save();
+                const el = document.getElementById('area-pdf'), cab = document.getElementById('cabecalho-pdf'), clon = document.createElement('div');
+                clon.appendChild(cab.cloneNode(true)); clon.appendChild(document.querySelector('.chart-box').cloneNode(true)); clon.appendChild(el.cloneNode(true));
+                clon.querySelectorAll('.road-map-wrapper').forEach(w => { w.style.overflowX='visible'; w.style.width='max-content'; });
+                html2pdf().set({ margin:10, filename:'BPRv.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,windowWidth:1200}, jsPDF:{format:'a4',orientation:'landscape'} }).from(clon).save();
             }
         }
 
-        function salvarComoPdfNativo() {
-            if (solicitarAcesso('relatorio')) {
-                window.print();
-            }
-        }
+        // --- UTILITÁRIOS MANTIDOS ---
+        function descobrirCidade(s, k) { let r=bancoRodovias[s]; for(let i=0;i<r.cidades.length;i++) if(k>=r.cidades[i].kmMin && k<=r.cidades[i].kmMax) return r.cidades[i].nome; return "??"; }
+        function descobrirAdmin(s, k) { let r=bancoRodovias[s]; for(let i=0;i<r.cidades.length;i++) if(k>=r.cidades[i].kmMin && k<=r.cidades[i].kmMax) return r.cidades[i].admin; return "?"; }
+        function descobrirTrecho(s, k) { let r=bancoRodovias[s]; for(let i=0;i<r.trechos.length;i++) if(k>=r.trechos[i].kmMin && k<=r.trechos[i].kmMax) return r.trechos[i]; return {nome:"?",admin:"DER"}; }
+
+        // --- EVENTOS E TABS GLOBAIS ---
+        window.mudarAba = (aba) => { document.getElementById('aba-lancamento').style.display = (aba==='lancamento'?'block':'none'); document.getElementById('aba-relatorio').style.display = (aba==='relatorio'?'block':'none'); document.querySelectorAll('.tab-btn').forEach(b => b.className='tab-btn'); document.getElementById(`btn-aba-${aba}`).className='tab-btn active'; if(aba==='relatorio') gerarRelatorioGrafico(); };
+        window.tentarAcessarRelatorio = () => solicitarAcesso('relatorio') && window.mudarAba('relatorio');
+        window.salvarComoPdfNativo = () => solicitarAcesso('relatorio') && window.print();
+        // Exporta para escopo global para onclicks
+        window.criarNovoAdmin = criarNovoAdmin; window.apagarRegistro = apagarRegistro; window.editarRegistro = editarRegistro;
     </script>
 </body>
 </html>
